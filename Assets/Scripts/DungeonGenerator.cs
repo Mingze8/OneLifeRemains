@@ -81,18 +81,37 @@ public class DungeonGenerator : MonoBehaviour
 
         path.Add(currentPos);
 
+        int stepCounter = 0;
+
         for (int i = 0; i < steps; i++)
         {
-            Vector2Int dir = GetRandomDirection();
-            Vector2Int newPos = currentPos + dir;
 
-            if (room.Contains(newPos))
+            bool validStep = false;
+
+            for(int attempt = 0; attempt < 5; attempt++)
             {
-                currentPos = newPos;
-                path.Add(currentPos);
+                Vector2Int dir = GetRandomDirection();
+                Vector2Int newPos = currentPos + dir;
+
+                if (room.Contains(newPos))
+                {
+                    currentPos = newPos;
+                    path.Add(currentPos);
+                    stepCounter++;
+                    validStep = true;
+                    break;
+                }
             }
+
+            if(!validStep)
+            {
+                Debug.Log("Randomwalk: Ended Early");
+                break;
+            }
+            
         }
 
+        Debug.Log($"Randomwalk: Step taken: {stepCounter}");
         return path;
     }
 
