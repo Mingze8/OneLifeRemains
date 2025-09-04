@@ -14,7 +14,13 @@ public class DungeonGenerator : MonoBehaviour
     public int minRoomSize = 10;
 
     public int offset = 2;
-    public int stepLength = 800;
+    //public int stepLength = 800;
+
+    [Range(0.3f, 0.8f)]
+    public float roomFillRatio = 0.8f; // Target coverage ratio for rooms
+
+    [Range(0.1f, 0.7f)]
+    public float centerBias = 0.15f; // Bias toward center
 
     private List<Room> rooms;
 
@@ -23,7 +29,7 @@ public class DungeonGenerator : MonoBehaviour
         GenerateDungeon();
     }
 
-    void GenerateDungeon()
+    public void GenerateDungeon()
     {
         tilemap.ClearAllTiles();
 
@@ -52,7 +58,7 @@ public class DungeonGenerator : MonoBehaviour
     {
 
         RectInt paddedRoom = ApplyOffset(room, offset);
-        HashSet<Vector2Int> roomTiles = RandomWalk(paddedRoom, stepLength);
+        HashSet<Vector2Int> roomTiles = RandomWalk(paddedRoom, 0);
 
         foreach (var pos in roomTiles)
         {
@@ -79,18 +85,39 @@ public class DungeonGenerator : MonoBehaviour
             room.y + room.height / 2
         );
 
+        // Store roomCenter for bias calculations
+        Vector2Int roomCenter = currentPos;
+
         path.Add(currentPos);
+
+        // Calculate target tiles based on room sizes
+        int roomArea = room.width * room.height;
+        int targetTiles = Mathf.RoundToInt(roomArea * roomFillRatio);
+
+        Debug.Log($"Room Size: {room.width}x{room.height}, Area: {roomArea}, Target: {targetTiles}");
 
         int stepCounter = 0;
 
-        for (int i = 0; i < steps; i++)
+        for (int i = 0; i < targetTiles && path.Count < targetTiles; i++)
         {
 
             bool validStep = false;
 
             for(int attempt = 0; attempt < 5; attempt++)
             {
-                Vector2Int dir = GetRandomDirection();
+                Vector2Int dir;
+
+                // Use center bias to choose direction
+                if (Random.value < centerBias)
+                {
+                    dir = GetDirectionTowardCenter(currentPos, roomCenter);
+                }
+                else
+                {
+                    // Move randomly
+                    dir = GetRandomDirection();
+                }
+
                 Vector2Int newPos = currentPos + dir;
 
                 if (room.Contains(newPos))
@@ -111,7 +138,7 @@ public class DungeonGenerator : MonoBehaviour
             
         }
 
-        Debug.Log($"Randomwalk: Step taken: {stepCounter}");
+        Debug.Log($"Randomwalk: Step taken: {stepCounter}, Coverage: {(float)path.Count/roomArea:P1}");
         return path;
     }
 
@@ -139,6 +166,24 @@ public class DungeonGenerator : MonoBehaviour
                 tilemap.SetTile((Vector3Int)pos, floorTile);
             }
         }
+    }
+
+    Vector2Int GetDirectionTowardCenter(Vector2Int currentPos, Vector2Int roomCenter)
+    {
+        Vector2Int diff = roomCenter - currentPos;
+
+        // Normalize to unit direction
+        int x = diff.x == 0 ? 0 : (diff.x > 0 ? 1 : -1);
+        int y = diff.y == 0 ? 0 : (diff.y > 0 ? 1 : -1);
+
+        // Add randomness to avoid straight line
+        if (Random.value < 0.3f)
+        {
+            if (Random.value < 0.5f) x = Random.Range(-1, 2);
+            else y = Random.Range(-1, 2);
+        }
+
+        return new Vector2Int(x, y);
     }
 
     List<Vector2Int> GetLine(Vector2Int from, Vector2Int to)
@@ -185,8 +230,7 @@ public class DungeonGenerator : MonoBehaviour
             Room room = rooms[i];
             Vector3 center = new Vector3(room.rect.center.x, room.rect.center.y, 0);
             Vector3 size = new Vector3(room.rect.width, room.rect.height, 0.1f);
-
-            // 用不同颜色标记房间
+            
             Gizmos.color = Color.red;
             Gizmos.DrawWireCube(center, size);
         }
