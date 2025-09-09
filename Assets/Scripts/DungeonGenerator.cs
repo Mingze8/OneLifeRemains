@@ -16,7 +16,7 @@ public class DungeonGenerator : MonoBehaviour
     public int offset = 2;
     //public int stepLength = 800;
 
-    [Range(0.3f, 0.8f)]
+    [Range(0.3f, 1f)]
     public float roomFillRatio = 0.8f; // Target coverage ratio for rooms
 
     [Range(0.1f, 0.7f)]
@@ -80,65 +80,73 @@ public class DungeonGenerator : MonoBehaviour
     HashSet<Vector2Int> RandomWalk(RectInt room, int steps)
     {
         HashSet<Vector2Int> path = new HashSet<Vector2Int>();
-        Vector2Int currentPos = new Vector2Int(
+        Vector2Int roomCenter = new Vector2Int(
             room.x + room.width / 2,
             room.y + room.height / 2
-        );
-
-        // Store roomCenter for bias calculations
-        Vector2Int roomCenter = currentPos;
-
-        path.Add(currentPos);
+        );    
 
         // Calculate target tiles based on room sizes
         int roomArea = room.width * room.height;
         int targetTiles = Mathf.RoundToInt(roomArea * roomFillRatio);
 
-        Debug.Log($"Room Size: {room.width}x{room.height}, Area: {roomArea}, Target: {targetTiles}");
+        int walksCount = Mathf.Max(1, roomArea / 200); // 1 walk per 200 tiles
+        walksCount = Mathf.Min(walksCount, 6);
 
-        int stepCounter = 0;
+        Debug.Log($"Room Size: {room.width}x{room.height}, Walks: {walksCount}, Target: {targetTiles}");
 
-        for (int i = 0; i < targetTiles && path.Count < targetTiles; i++)
+        int totalSteps = 0;
+
+        for (int walkNum = 0; walkNum < walksCount; walkNum++)
         {
 
-            bool validStep = false;
+            Vector2Int currentPos = roomCenter;
+            path.Add(currentPos);
 
-            for(int attempt = 0; attempt < 5; attempt++)
+            // Each walk gets a portion of the target tiles
+
+            int walkSteps = targetTiles / walksCount;
+
+            for (int i = 0; i < walkSteps && path.Count < targetTiles; i++)
             {
-                Vector2Int dir;
+                bool validStep = false;
 
-                // Use center bias to choose direction
-                if (Random.value < centerBias)
+                for (int attempt = 0; attempt < 5; attempt++)
                 {
-                    dir = GetDirectionTowardCenter(currentPos, roomCenter);
+                    Vector2Int dir;
+
+                    // Use center bias to choose direction
+                    if (Random.value < centerBias)
+                    {
+                        dir = GetDirectionTowardCenter(currentPos, roomCenter);
+                    }
+                    else
+                    {
+                        // Move randomly
+                        dir = GetRandomDirection();
+                    }
+
+                    Vector2Int newPos = currentPos + dir;
+
+                    if (room.Contains(newPos))
+                    {
+                        currentPos = newPos;
+                        path.Add(currentPos);
+                        totalSteps++;
+                        validStep = true;
+                        break;
+                    }
                 }
-                else
-                {
-                    // Move randomly
-                    dir = GetRandomDirection();
-                }
 
-                Vector2Int newPos = currentPos + dir;
-
-                if (room.Contains(newPos))
+                if (!validStep)
                 {
-                    currentPos = newPos;
-                    path.Add(currentPos);
-                    stepCounter++;
-                    validStep = true;
+                    //Debug.Log("Randomwalk: Ended Early");
                     break;
                 }
-            }
-
-            if(!validStep)
-            {
-                Debug.Log("Randomwalk: Ended Early");
-                break;
-            }
+            }            
             
         }
 
-        Debug.Log($"Randomwalk: Step taken: {stepCounter}, Coverage: {(float)path.Count/roomArea:P1}");
+        Debug.Log($"Randomwalk: {walksCount} walks, {totalSteps} total steps, Coverage: {(float)path.Count/roomArea:P1}");
         return path;
     }
 

@@ -596,9 +596,10 @@ MonoBehaviour:
   wallTile: {fileID: 11400000, guid: dd473e3fef9173d4c9a8e79fb163fbf3, type: 2}
   mapWidth: 100
   mapHeight: 100
-  minRoomSize: 25
+  minRoomSize: 30
   offset: 2
-  stepLength: 1000
+  roomFillRatio: 1
+  centerBias: 0.15
 --- !u!4 &1485658860
 Transform:
   m_ObjectHideFlags: 0
