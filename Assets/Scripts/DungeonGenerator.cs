@@ -7,13 +7,15 @@ public class DungeonGenerator : MonoBehaviour
 {
     public Tilemap tilemap;
     public TileBase floorTile;
-    public TileBase wallTile;
+
+    // Single fallback wall tile
+    public TileBase defaultWallTile;
 
     public int mapWidth = 80;
-    public int mapHeight = 80;    
+    public int mapHeight = 80;
     public int minRoomSize = 20;
 
-    public int offset = 2;    
+    public int offset = 2;
 
     [Range(0.3f, 1f)]
     public float roomFillRatio = .9f; // Target coverage ratio for rooms
@@ -22,6 +24,8 @@ public class DungeonGenerator : MonoBehaviour
     public float centerBias = 0.1f; // Bias toward center
 
     private List<Room> rooms;
+    private HashSet<Vector2Int> allFloorTiles;
+    private HashSet<Vector2Int> allWallTiles;
 
     void Start()
     {
@@ -31,22 +35,26 @@ public class DungeonGenerator : MonoBehaviour
     public void GenerateDungeon()
     {
         tilemap.ClearAllTiles();
+        allFloorTiles = new HashSet<Vector2Int>();
+        allWallTiles = new HashSet<Vector2Int>();
 
         RectInt dungeonArea = new RectInt(0, 0, mapWidth, mapHeight);
         rooms = BSPGenerator.GenerateRooms(dungeonArea, minRoomSize, 8);
-
 
         Debug.Log($"=== DUNGEON GENERATION STARTED ===");
         Debug.Log($"Target: {rooms.Count} rooms on {mapWidth}x{mapHeight} map");
         Debug.Log($"=== ROOM GENERATION - COVERAGE METRICS ===");
 
-        for (int i = 0; i <rooms.Count; i++)
+        for (int i = 0; i < rooms.Count; i++)
         {
             GenerateRoomLayout(rooms[i].rect, i);
         }
 
         Debug.Log($"=== CORRIDOR GENERATION ===");
         ConnectRoomsWithCorridors(rooms);
+
+        Debug.Log($"=== WALL GENERATION ===");
+        GenerateWalls();
 
         LogOverallDungeonMetrics();
         Debug.Log($"=== DUNGEON GENERATION COMPLETE ===");
@@ -64,18 +72,18 @@ public class DungeonGenerator : MonoBehaviour
 
     void GenerateRoomLayout(RectInt room, int roomIndex)
     {
-
         RectInt paddedRoom = ApplyOffset(room, offset);
         HashSet<Vector2Int> roomTiles = RandomWalk(paddedRoom, 0);
 
-        float actualCoverage = (float)roomTiles.Count / (paddedRoom.width * paddedRoom.height);        
+        float actualCoverage = (float)roomTiles.Count / (paddedRoom.width * paddedRoom.height);
         Debug.Log($"Room {roomIndex + 1}: Coverage {actualCoverage:P1} (Target: {roomFillRatio:P1}), " +
                   $"Tiles: {roomTiles.Count}/{paddedRoom.width * paddedRoom.height}");
 
         foreach (var pos in roomTiles)
         {
             tilemap.SetTile((Vector3Int)pos, floorTile);
-        }        
+            allFloorTiles.Add(pos);
+        }
     }
 
     HashSet<Vector2Int> RandomWalk(RectInt room, int steps)
@@ -84,25 +92,23 @@ public class DungeonGenerator : MonoBehaviour
         Vector2Int roomCenter = new Vector2Int(
             room.x + room.width / 2,
             room.y + room.height / 2
-        );    
+        );
 
         // Calculate target tiles based on room sizes
         int roomArea = room.width * room.height;
         int targetTiles = Mathf.RoundToInt(roomArea * roomFillRatio);
 
         int walksCount = Mathf.Max(1, roomArea / 200); // 1 walk per 200 tiles
-        walksCount = Mathf.Min(walksCount, 6);        
+        walksCount = Mathf.Min(walksCount, 6);
 
         int totalSteps = 0;
 
         for (int walkNum = 0; walkNum < walksCount; walkNum++)
         {
-
             Vector2Int currentPos = roomCenter;
             path.Add(currentPos);
 
             // Each walk gets a portion of the target tiles
-
             int walkSteps = targetTiles / walksCount;
 
             for (int i = 0; i < walkSteps && path.Count < targetTiles; i++)
@@ -138,12 +144,10 @@ public class DungeonGenerator : MonoBehaviour
 
                 if (!validStep)
                 {
-                    //Debug.Log("Randomwalk: Ended Early");
                     break;
                 }
-            }            
-            
-        }        
+            }
+        }
         return path;
     }
 
@@ -153,7 +157,7 @@ public class DungeonGenerator : MonoBehaviour
             Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right
         };
         return directions[Random.Range(0, directions.Length)];
-    }    
+    }
 
     void ConnectRoomsWithCorridors(List<Room> rooms)
     {
@@ -191,10 +195,12 @@ public class DungeonGenerator : MonoBehaviour
             foreach (var pos in horizontalLine)
             {
                 tilemap.SetTile((Vector3Int)pos, floorTile);
+                allFloorTiles.Add(pos);
             }
             foreach (var pos in verticalLine)
             {
                 tilemap.SetTile((Vector3Int)pos, floorTile);
+                allFloorTiles.Add(pos);
             }
         }
 
@@ -212,7 +218,7 @@ public class DungeonGenerator : MonoBehaviour
         int current = 0;
         order.Add(current);
         visited.Add(current);
-        
+
         while (visited.Count < rooms.Count)
         {
             float closestDistance = float.MaxValue;
@@ -244,7 +250,6 @@ public class DungeonGenerator : MonoBehaviour
 
         return order;
     }
-
 
     Vector2Int GetDirectionTowardCenter(Vector2Int currentPos, Vector2Int roomCenter)
     {
@@ -299,6 +304,56 @@ public class DungeonGenerator : MonoBehaviour
         return line;
     }
 
+    // SIMPLIFIED WALL GENERATION - Just one wall type
+    void GenerateWalls()
+    {
+        // Find all wall positions
+        FindWallPositions();
+
+        // Place single pattern walls everywhere
+        PlaceSinglePatternWalls();
+
+        Debug.Log($"Generated {allWallTiles.Count} wall tiles (single pattern)");
+    }
+
+    void FindWallPositions()
+    {
+        Vector2Int[] directions = {
+            Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
+            new Vector2Int(1, 1), new Vector2Int(1, -1), new Vector2Int(-1, 1), new Vector2Int(-1, -1)
+        };
+
+        foreach (var floorPos in allFloorTiles)
+        {
+            foreach (var direction in directions)
+            {
+                Vector2Int neighborPos = floorPos + direction;
+
+                if (IsValidPosition(neighborPos) && !allFloorTiles.Contains(neighborPos))
+                {
+                    allWallTiles.Add(neighborPos);
+                }
+            }
+        }
+    }
+
+    void PlaceSinglePatternWalls()
+    {
+        // Get the wall tile to use
+        TileBase wallTileToUse = defaultWallTile;
+
+        // Place the same wall tile everywhere
+        foreach (var wallPos in allWallTiles)
+        {
+            tilemap.SetTile((Vector3Int)wallPos, wallTileToUse);
+        }
+    }
+
+    bool IsValidPosition(Vector2Int pos)
+    {
+        return pos.x >= 0 && pos.x < mapWidth && pos.y >= 0 && pos.y < mapHeight;
+    }
+
     void LogOverallDungeonMetrics()
     {
         if (rooms == null || rooms.Count == 0) return;
@@ -306,7 +361,6 @@ public class DungeonGenerator : MonoBehaviour
         // Calculate total metrics
         int totalRoomArea = 0;
         int totalWalkableArea = 0;
-        float totalCoverage = 0;
 
         foreach (var room in rooms)
         {
@@ -352,7 +406,7 @@ public class DungeonGenerator : MonoBehaviour
             Room room = rooms[i];
             Vector3 center = new Vector3(room.rect.center.x, room.rect.center.y, 0);
             Vector3 size = new Vector3(room.rect.width, room.rect.height, 0.1f);
-            
+
             Gizmos.color = Color.red;
             Gizmos.DrawWireCube(center, size);
         }
