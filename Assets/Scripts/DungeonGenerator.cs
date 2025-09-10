@@ -9,18 +9,17 @@ public class DungeonGenerator : MonoBehaviour
     public TileBase floorTile;
     public TileBase wallTile;
 
-    public int mapWidth = 100;
-    public int mapHeight = 100;
-    public int minRoomSize = 10;
+    public int mapWidth = 80;
+    public int mapHeight = 80;    
+    public int minRoomSize = 20;
 
-    public int offset = 2;
-    //public int stepLength = 800;
+    public int offset = 2;    
 
     [Range(0.3f, 1f)]
-    public float roomFillRatio = 0.8f; // Target coverage ratio for rooms
+    public float roomFillRatio = .9f; // Target coverage ratio for rooms
 
     [Range(0.1f, 0.7f)]
-    public float centerBias = 0.15f; // Bias toward center
+    public float centerBias = 0.1f; // Bias toward center
 
     private List<Room> rooms;
 
@@ -36,12 +35,21 @@ public class DungeonGenerator : MonoBehaviour
         RectInt dungeonArea = new RectInt(0, 0, mapWidth, mapHeight);
         rooms = BSPGenerator.GenerateRooms(dungeonArea, minRoomSize, 8);
 
-        foreach (var room in rooms)
+
+        Debug.Log($"=== DUNGEON GENERATION STARTED ===");
+        Debug.Log($"Target: {rooms.Count} rooms on {mapWidth}x{mapHeight} map");
+        Debug.Log($"=== ROOM GENERATION - COVERAGE METRICS ===");
+
+        for (int i = 0; i <rooms.Count; i++)
         {
-            GenerateRoomLayout(room.rect);
+            GenerateRoomLayout(rooms[i].rect, i);
         }
 
+        Debug.Log($"=== CORRIDOR GENERATION ===");
         ConnectRoomsWithCorridors(rooms);
+
+        LogOverallDungeonMetrics();
+        Debug.Log($"=== DUNGEON GENERATION COMPLETE ===");
     }
 
     RectInt ApplyOffset(RectInt room, int offset)
@@ -54,27 +62,20 @@ public class DungeonGenerator : MonoBehaviour
         );
     }
 
-    void GenerateRoomLayout(RectInt room)
+    void GenerateRoomLayout(RectInt room, int roomIndex)
     {
 
         RectInt paddedRoom = ApplyOffset(room, offset);
         HashSet<Vector2Int> roomTiles = RandomWalk(paddedRoom, 0);
 
+        float actualCoverage = (float)roomTiles.Count / (paddedRoom.width * paddedRoom.height);        
+        Debug.Log($"Room {roomIndex + 1}: Coverage {actualCoverage:P1} (Target: {roomFillRatio:P1}), " +
+                  $"Tiles: {roomTiles.Count}/{paddedRoom.width * paddedRoom.height}");
+
         foreach (var pos in roomTiles)
         {
             tilemap.SetTile((Vector3Int)pos, floorTile);
-        }
-
-
-        // Check BSP Boundary
-
-        //for (int x = room.xMin; x < room.xMax; x++)
-        //{
-        //    for (int y = room.yMin; y < room.yMax; y++)
-        //    {
-        //        tilemap.SetTile(new Vector3Int(x, y, 0), floorTile);
-        //    }
-        //}
+        }        
     }
 
     HashSet<Vector2Int> RandomWalk(RectInt room, int steps)
@@ -90,9 +91,7 @@ public class DungeonGenerator : MonoBehaviour
         int targetTiles = Mathf.RoundToInt(roomArea * roomFillRatio);
 
         int walksCount = Mathf.Max(1, roomArea / 200); // 1 walk per 200 tiles
-        walksCount = Mathf.Min(walksCount, 6);
-
-        Debug.Log($"Room Size: {room.width}x{room.height}, Walks: {walksCount}, Target: {targetTiles}");
+        walksCount = Mathf.Min(walksCount, 6);        
 
         int totalSteps = 0;
 
@@ -144,9 +143,7 @@ public class DungeonGenerator : MonoBehaviour
                 }
             }            
             
-        }
-
-        Debug.Log($"Randomwalk: {walksCount} walks, {totalSteps} total steps, Coverage: {(float)path.Count/roomArea:P1}");
+        }        
         return path;
     }
 
@@ -156,25 +153,98 @@ public class DungeonGenerator : MonoBehaviour
             Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right
         };
         return directions[Random.Range(0, directions.Length)];
-    }
+    }    
 
     void ConnectRoomsWithCorridors(List<Room> rooms)
     {
-        for (int i = 0; i < rooms.Count - 1; i++)
-        {
-            Vector2Int centerA = rooms[i].GetCenter();
-            Vector2Int centerB = rooms[i + 1].GetCenter();
+        if (rooms.Count < 2) return;
 
-            foreach (var pos in GetLine(centerA, new Vector2Int(centerB.x, centerA.y)))
+        HashSet<(int, int)> connections = new HashSet<(int, int)>();
+        List<int> connectionOrder = GetConnectionOrder(rooms);
+
+        // Connect rooms with corridors
+        for (int i = 0; i < connectionOrder.Count - 1; i++)
+        {
+            int roomA = connectionOrder[i];
+            int roomB = connectionOrder[i + 1];
+            connections.Add((Mathf.Min(roomA, roomB), Mathf.Max(roomA, roomB)));
+        }
+
+        // Calculate corridor metrics before drawing
+        float totalCorridorLength = 0;
+        int totalCorridorTiles = 0;
+
+        foreach (var connection in connections)
+        {
+            Vector2Int centerA = rooms[connection.Item1].GetCenter();
+            Vector2Int centerB = rooms[connection.Item2].GetCenter();
+
+            float distance = Vector2Int.Distance(centerA, centerB);
+            totalCorridorLength += distance;
+
+            // Count tiles for each corridor segment
+            var horizontalLine = GetLine(centerA, new Vector2Int(centerB.x, centerA.y));
+            var verticalLine = GetLine(new Vector2Int(centerB.x, centerA.y), centerB);
+            totalCorridorTiles += horizontalLine.Count + verticalLine.Count;
+
+            // Draw the corridor
+            foreach (var pos in horizontalLine)
             {
                 tilemap.SetTile((Vector3Int)pos, floorTile);
             }
-            foreach (var pos in GetLine(new Vector2Int(centerB.x, centerA.y), centerB))
+            foreach (var pos in verticalLine)
             {
                 tilemap.SetTile((Vector3Int)pos, floorTile);
             }
         }
+
+        float avgCorridorLength = totalCorridorLength / connections.Count;
+        Debug.Log($"Connected {connections.Count} corridors");
+        Debug.Log($"Corridor Stats - Total Length: {totalCorridorLength:F1}, Avg: {avgCorridorLength:F1}, Tiles: {totalCorridorTiles}");
     }
+
+    List<int> GetConnectionOrder(List<Room> rooms)
+    {
+        List<int> order = new List<int>();
+        HashSet<int> visited = new HashSet<int>();
+
+        // Start from room 1
+        int current = 0;
+        order.Add(current);
+        visited.Add(current);
+        
+        while (visited.Count < rooms.Count)
+        {
+            float closestDistance = float.MaxValue;
+            int closestRoom = -1;
+
+            Vector2Int currentCenter = rooms[current].GetCenter();
+
+            for (int i = 0; i < rooms.Count; i++)
+            {
+                if (visited.Contains(i)) continue;
+
+                Vector2Int otherCenter = rooms[i].GetCenter();
+                float distance = Vector2Int.Distance(currentCenter, otherCenter);
+
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestRoom = i;
+                }
+            }
+
+            if (closestRoom != -1)
+            {
+                order.Add(closestRoom);
+                visited.Add(closestRoom);
+                current = closestRoom;
+            }
+        }
+
+        return order;
+    }
+
 
     Vector2Int GetDirectionTowardCenter(Vector2Int currentPos, Vector2Int roomCenter)
     {
@@ -227,6 +297,50 @@ public class DungeonGenerator : MonoBehaviour
 
         line.Add(to);
         return line;
+    }
+
+    void LogOverallDungeonMetrics()
+    {
+        if (rooms == null || rooms.Count == 0) return;
+
+        // Calculate total metrics
+        int totalRoomArea = 0;
+        int totalWalkableArea = 0;
+        float totalCoverage = 0;
+
+        foreach (var room in rooms)
+        {
+            RectInt paddedRoom = ApplyOffset(room.rect, offset);
+            int roomArea = paddedRoom.width * paddedRoom.height;
+            int expectedWalkable = Mathf.RoundToInt(roomArea * roomFillRatio);
+
+            totalRoomArea += roomArea;
+            totalWalkableArea += expectedWalkable;
+        }
+
+        int totalDungeonArea = mapWidth * mapHeight;
+        float dungeonDensity = (float)totalWalkableArea / totalDungeonArea;
+        float avgRoomSize = (float)totalRoomArea / rooms.Count;
+
+        // Room size analysis
+        var roomSizes = new List<int>();
+        foreach (var room in rooms)
+        {
+            RectInt paddedRoom = ApplyOffset(room.rect, offset);
+            roomSizes.Add(paddedRoom.width * paddedRoom.height);
+        }
+        roomSizes.Sort();
+
+        int minRoomArea = roomSizes[0];
+        int maxRoomArea = roomSizes[roomSizes.Count - 1];
+        int medianRoomArea = roomSizes[roomSizes.Count / 2];
+
+        Debug.Log($"=== OVERALL DUNGEON METRICS ===");
+        Debug.Log($"Rooms Generated: {rooms.Count}");
+        Debug.Log($"Room Sizes - Min: {minRoomArea}, Max: {maxRoomArea}, Avg: {avgRoomSize:F1}, Median: {medianRoomArea}");
+        Debug.Log($"Total Walkable Area: {totalWalkableArea:N0} tiles");
+        Debug.Log($"Dungeon Density: {dungeonDensity:P1} ({totalWalkableArea:N0}/{totalDungeonArea:N0})");
+        Debug.Log($"Space Efficiency: {((float)totalRoomArea / totalDungeonArea):P1}");
     }
 
     void OnDrawGizmos()

@@ -297,7 +297,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1485658859}
+      - m_Target: {fileID: 1485658861}
         m_TargetAssemblyTypeName: DungeonGenerator, Assembly-CSharp
         m_MethodName: GenerateDungeon
         m_Mode: 1
@@ -571,7 +571,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1485658860}
-  - component: {fileID: 1485658859}
+  - component: {fileID: 1485658861}
   m_Layer: 0
   m_Name: DungeonGenerator
   m_TagString: Untagged
@@ -579,27 +579,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1485658859
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1485658858}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 969e2ce2c07caf0408ffe7fb054410d3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  tilemap: {fileID: 1661834704}
-  floorTile: {fileID: 11400000, guid: 73d552fd842a8994bb94ec27c7b262ae, type: 2}
-  wallTile: {fileID: 11400000, guid: dd473e3fef9173d4c9a8e79fb163fbf3, type: 2}
-  mapWidth: 100
-  mapHeight: 100
-  minRoomSize: 30
-  offset: 2
-  roomFillRatio: 1
-  centerBias: 0.15
 --- !u!4 &1485658860
 Transform:
   m_ObjectHideFlags: 0
@@ -615,6 +594,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1485658861
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1485658858}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 969e2ce2c07caf0408ffe7fb054410d3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tilemap: {fileID: 1661834704}
+  floorTile: {fileID: 11400000, guid: 73d552fd842a8994bb94ec27c7b262ae, type: 2}
+  wallTile: {fileID: 11400000, guid: dd473e3fef9173d4c9a8e79fb163fbf3, type: 2}
+  mapWidth: 80
+  mapHeight: 80
+  minRoomSize: 15
+  offset: 2
+  roomFillRatio: 1
+  centerBias: 0.15
 --- !u!1 &1661834701
 GameObject:
   m_ObjectHideFlags: 0
