@@ -2,6 +2,7 @@
 using System.Security.Cryptography.X509Certificates;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using Cinemachine;
 
 public class DungeonGenerator : MonoBehaviour
 {
@@ -441,7 +442,22 @@ public class DungeonGenerator : MonoBehaviour
             Debug.Log($"Created basic player in room 0 at position: {spawnPosition}");
         }
 
-        SetupCameraFollow();
+        SetupCinemachineFollow(playerInstance.transform);
+    }
+
+    void SetupCinemachineFollow(Transform target)
+    {
+        CinemachineVirtualCamera vcam = FindObjectOfType<CinemachineVirtualCamera>();
+
+        if (vcam != null)
+        {
+            vcam.Follow = target;            
+            Debug.Log("Cinemachine set to follow the player.");
+        }
+        else
+        {
+            Debug.LogWarning("No CinemachineVirtualCamera found in the scene!");
+        }
     }
 
     GameObject CreateBasicPlayer(Vector3 position)
@@ -474,32 +490,6 @@ public class DungeonGenerator : MonoBehaviour
         PlayerController controller = player.AddComponent<PlayerController>();
 
         return player;
-    }
-
-    void SetupCameraFollow()
-    {
-        if (playerInstance == null) return;
-
-        // Try to find main camera
-        Camera mainCamera = Camera.main;
-        if (mainCamera == null)
-        {
-            mainCamera = FindObjectOfType<Camera>();
-        }
-
-        if (mainCamera != null)
-        {
-            // Add a simple camera follow script if it doesn't exist
-            CameraFollow cameraFollow = mainCamera.GetComponent<CameraFollow>();
-            if (cameraFollow == null)
-            {
-                cameraFollow = mainCamera.gameObject.AddComponent<CameraFollow>();
-            }
-
-            cameraFollow.target = playerInstance.transform;
-
-            Debug.Log("Camera setup to follow player");
-        }
     }
 
     void OnDrawGizmos()
