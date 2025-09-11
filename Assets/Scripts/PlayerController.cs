@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public float speed = 5;
+    public float speed = 5;    
     public int facingDirection = -1;
     public Rigidbody2D rb;
 
@@ -27,8 +27,8 @@ public class PlayerController : MonoBehaviour
     
     void Update()
     {
-        float horizontal = Input.GetAxis("Horizontal");
-        float vertical = Input.GetAxis("Vertical");
+        float horizontal = Input.GetButton("Horizontal") ? (Input.GetKey(KeyCode.A) ? -1 : (Input.GetKey(KeyCode.D) ? 1 : 0)) : 0;
+        float vertical = Input.GetButton("Vertical") ? (Input.GetKey(KeyCode.W) ? 1 : (Input.GetKey(KeyCode.S) ? -1 : 0)) : 0;
 
         if (horizontal > 0 && facingDirection < 0 ||
             horizontal < 0 && facingDirection > 0)
@@ -37,6 +37,8 @@ public class PlayerController : MonoBehaviour
         }
 
         Vector2 movement = new Vector2(horizontal, vertical);
+        movement.Normalize();
+
         anim.SetFloat("Speed", movement.magnitude);
         rb.velocity = movement * speed;
 

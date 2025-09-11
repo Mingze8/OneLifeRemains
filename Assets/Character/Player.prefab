@@ -3048,7 +3048,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e184099241cb38a4cb1559d1cfc9a984, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 5
+  speed: 4
   facingDirection: -1
   rb: {fileID: 6821217174301685498}
   anim: {fileID: 81485915404393312}
