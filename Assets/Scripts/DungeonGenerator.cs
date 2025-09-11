@@ -9,6 +9,7 @@ public class DungeonGenerator : MonoBehaviour
     [Header("Tilemaps")]
     public Tilemap tilemap;
     public Tilemap wallTilemap;
+    public Tilemap corridorTilemap;
     public TileBase floorTile;    
     public TileBase defaultWallTile;
 
@@ -26,12 +27,15 @@ public class DungeonGenerator : MonoBehaviour
 
     [Header("Player Settings")]
     public GameObject playerPrefab;
-    public Transform playerTransform;
+    private GameObject playerInstance;
+    //public Transform playerTransform;
+
+    public DistributionManager distributionManager;
 
     private List<Room> rooms;
     private HashSet<Vector2Int> allFloorTiles;
     private HashSet<Vector2Int> allWallTiles;
-    private GameObject playerInstance;
+    private HashSet<Vector2Int> allCorridorTiles;
 
     void Start()
     {
@@ -42,9 +46,11 @@ public class DungeonGenerator : MonoBehaviour
     {
         tilemap.ClearAllTiles();
         wallTilemap.ClearAllTiles();
+        corridorTilemap.ClearAllTiles();
 
         allFloorTiles = new HashSet<Vector2Int>();
         allWallTiles = new HashSet<Vector2Int>();
+        allCorridorTiles = new HashSet<Vector2Int>();
 
         RectInt dungeonArea = new RectInt(0, 0, mapWidth, mapHeight);
         rooms = BSPGenerator.GenerateRooms(dungeonArea, minRoomSize, 8);
@@ -66,6 +72,10 @@ public class DungeonGenerator : MonoBehaviour
 
         Debug.Log($"=== PLAYER SPAWN ===");
         SpawnPlayer();
+
+        Debug.Log($"=== ENEMY SPAWN ===");
+        distributionManager.ClearAlLEnemies();
+        distributionManager.SpawnEnemy(rooms, allFloorTiles, offset);
 
         LogOverallDungeonMetrics();
         Debug.Log($"=== DUNGEON GENERATION COMPLETE ===");
@@ -205,13 +215,13 @@ public class DungeonGenerator : MonoBehaviour
             // Draw the corridor
             foreach (var pos in horizontalLine)
             {
-                tilemap.SetTile((Vector3Int)pos, floorTile);
-                allFloorTiles.Add(pos);
+                corridorTilemap.SetTile((Vector3Int)pos, floorTile);
+                allCorridorTiles.Add(pos);
             }
             foreach (var pos in verticalLine)
             {
-                tilemap.SetTile((Vector3Int)pos, floorTile);
-                allFloorTiles.Add(pos);
+                corridorTilemap.SetTile((Vector3Int)pos, floorTile);
+                allCorridorTiles.Add(pos);
             }
         }
 
@@ -330,17 +340,21 @@ public class DungeonGenerator : MonoBehaviour
     void FindWallPositions()
     {
         Vector2Int[] directions = {
-            Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
-            new Vector2Int(1, 1), new Vector2Int(1, -1), new Vector2Int(-1, 1), new Vector2Int(-1, -1)
-        };
+        Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
+        new Vector2Int(1, 1), new Vector2Int(1, -1), new Vector2Int(-1, 1), new Vector2Int(-1, -1)
+    };
 
-        foreach (var floorPos in allFloorTiles)
+        // Combine both floor and corridor tiles into one set for wall detection
+        HashSet<Vector2Int> allWalkableTiles = new HashSet<Vector2Int>(allFloorTiles);
+        allWalkableTiles.UnionWith(allCorridorTiles);
+
+        foreach (var floorPos in allWalkableTiles)
         {
             foreach (var direction in directions)
             {
                 Vector2Int neighborPos = floorPos + direction;
 
-                if (IsValidPosition(neighborPos) && !allFloorTiles.Contains(neighborPos))
+                if (IsValidPosition(neighborPos) && !allWalkableTiles.Contains(neighborPos))
                 {
                     allWallTiles.Add(neighborPos);
                 }
@@ -416,33 +430,35 @@ public class DungeonGenerator : MonoBehaviour
             return;
         }
 
+        RemoveExistingPlayer();
+
         // Get the first room
         Room startingRoom = rooms[0];        
 
-        Vector3 spawnPosition = new Vector3(startingRoom.GetCenter().x, startingRoom.GetCenter().y, 0);
-
-        // Handle player spawning
-        if (playerTransform != null)
-        {
-            // Use existing player
-            playerTransform.position = spawnPosition;
-            playerInstance = playerTransform.gameObject;
-            Debug.Log($"Moved existing player to room 0 at position: {spawnPosition}");
-        }
-        else if (playerPrefab != null)
-        {
-            // Spawn new player from prefab
-            playerInstance = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
-            Debug.Log($"Spawned new player in room 0 at position: {spawnPosition}");
-        }
-        else
-        {
-            // Create basic player GameObject
-            playerInstance = CreateBasicPlayer(spawnPosition);
-            Debug.Log($"Created basic player in room 0 at position: {spawnPosition}");
-        }
+        Vector3 spawnPosition = new Vector3(startingRoom.GetCenter().x, startingRoom.GetCenter().y, 0);        
+        
+        // Spawn player from prefab
+        playerInstance = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
+        Debug.Log($"Spawned new player in room 0 at position: {spawnPosition}");                
 
         SetupCinemachineFollow(playerInstance.transform);
+    }
+
+    void RemoveExistingPlayer()
+    {
+        if (playerInstance != null)
+        {
+            if (Application.isPlaying)
+            {
+                Destroy(playerInstance);
+                Debug.Log("Destroyed existing player (via playerInstance reference)");
+            }
+            else
+            {
+                DestroyImmediate(playerInstance);
+            }
+            playerInstance = null;
+        }
     }
 
     void SetupCinemachineFollow(Transform target)
@@ -458,39 +474,7 @@ public class DungeonGenerator : MonoBehaviour
         {
             Debug.LogWarning("No CinemachineVirtualCamera found in the scene!");
         }
-    }
-
-    GameObject CreateBasicPlayer(Vector3 position)
-    {
-        // Create a basic player GameObject
-        GameObject player = new GameObject("Player");
-        player.transform.position = position;
-
-        // Add visual representation
-        SpriteRenderer spriteRenderer = player.AddComponent<SpriteRenderer>();
-
-        // Create a simple colored square sprite
-        Texture2D playerTexture = new Texture2D(16, 16);
-        Color[] pixels = new Color[16 * 16];
-        for (int i = 0; i < pixels.Length; i++)
-        {
-            pixels[i] = Color.blue;
-        }
-        playerTexture.SetPixels(pixels);
-        playerTexture.Apply();
-
-        Sprite playerSprite = Sprite.Create(playerTexture, new Rect(0, 0, 16, 16), new Vector2(0.5f, 0.5f), 16);
-        spriteRenderer.sprite = playerSprite;
-
-        // Add collider
-        BoxCollider2D collider = player.AddComponent<BoxCollider2D>();
-        collider.size = new Vector2(0.8f, 0.8f);
-
-        // Add player controller
-        PlayerController controller = player.AddComponent<PlayerController>();
-
-        return player;
-    }
+    }    
 
     void OnDrawGizmos()
     {
