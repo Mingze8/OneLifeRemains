@@ -5,16 +5,16 @@ using UnityEngine.Tilemaps;
 
 public class DungeonGenerator : MonoBehaviour
 {
+    [Header("Tilemaps")]
     public Tilemap tilemap;
-    public TileBase floorTile;
-
-    // Single fallback wall tile
+    public Tilemap wallTilemap;
+    public TileBase floorTile;    
     public TileBase defaultWallTile;
 
+    [Header("Map Settings")]
     public int mapWidth = 80;
     public int mapHeight = 80;
     public int minRoomSize = 20;
-
     public int offset = 2;
 
     [Range(0.3f, 1f)]
@@ -40,6 +40,8 @@ public class DungeonGenerator : MonoBehaviour
     public void GenerateDungeon()
     {
         tilemap.ClearAllTiles();
+        wallTilemap.ClearAllTiles();
+
         allFloorTiles = new HashSet<Vector2Int>();
         allWallTiles = new HashSet<Vector2Int>();
 
@@ -353,7 +355,7 @@ public class DungeonGenerator : MonoBehaviour
         // Place the same wall tile everywhere
         foreach (var wallPos in allWallTiles)
         {
-            tilemap.SetTile((Vector3Int)wallPos, wallTileToUse);
+            wallTilemap.SetTile((Vector3Int)wallPos, wallTileToUse);
         }
     }
 
