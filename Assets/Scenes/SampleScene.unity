@@ -183,7 +183,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 60
+  orthographic size: 2.5
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -608,22 +608,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tilemap: {fileID: 1661834704}
   floorTile: {fileID: 11400000, guid: 73d552fd842a8994bb94ec27c7b262ae, type: 2}
-  wallTiles:
-    topWall: {fileID: 0}
-    bottomWall: {fileID: 0}
-    leftWall: {fileID: 0}
-    rightWall: {fileID: 0}
-    topLeftCorner: {fileID: 11400000, guid: 92f143a7ddd2dbd49a0fd992a9b10dca, type: 2}
-    topRightCorner: {fileID: 0}
-    bottomLeftCorner: {fileID: 0}
-    bottomRightCorner: {fileID: 0}
-    innerTopLeftCorner: {fileID: 0}
-    innerTopRightCorner: {fileID: 0}
-    innerBottomLeftCorner: {fileID: 0}
-    innerBottomRightCorner: {fileID: 0}
-    isolatedWall: {fileID: 0}
-    horizontalWall: {fileID: 0}
-    verticalWall: {fileID: 0}
   defaultWallTile: {fileID: 11400000, guid: dd473e3fef9173d4c9a8e79fb163fbf3, type: 2}
   mapWidth: 80
   mapHeight: 80
@@ -631,6 +615,8 @@ MonoBehaviour:
   offset: 2
   roomFillRatio: 0.9
   centerBias: 0.1
+  playerPrefab: {fileID: 5836857197505123814, guid: d79d4337cea7c0c4b9fa1d525cfac93a, type: 3}
+  playerTransform: {fileID: 0}
 --- !u!1 &1661834701
 GameObject:
   m_ObjectHideFlags: 0

@@ -23,9 +23,14 @@ public class DungeonGenerator : MonoBehaviour
     [Range(0.1f, 0.7f)]
     public float centerBias = 0.1f; // Bias toward center
 
+    [Header("Player Settings")]
+    public GameObject playerPrefab;
+    public Transform playerTransform;
+
     private List<Room> rooms;
     private HashSet<Vector2Int> allFloorTiles;
     private HashSet<Vector2Int> allWallTiles;
+    private GameObject playerInstance;
 
     void Start()
     {
@@ -55,6 +60,9 @@ public class DungeonGenerator : MonoBehaviour
 
         Debug.Log($"=== WALL GENERATION ===");
         GenerateWalls();
+
+        Debug.Log($"=== PLAYER SPAWN ===");
+        SpawnPlayer();
 
         LogOverallDungeonMetrics();
         Debug.Log($"=== DUNGEON GENERATION COMPLETE ===");
@@ -397,6 +405,101 @@ public class DungeonGenerator : MonoBehaviour
         Debug.Log($"Space Efficiency: {((float)totalRoomArea / totalDungeonArea):P1}");
     }
 
+    void SpawnPlayer()
+    {
+        if (rooms == null || rooms.Count == 0)
+        {
+            Debug.LogWarning("No rooms generated! Cannot spawn player.");
+            return;
+        }
+
+        // Get the first room
+        Room startingRoom = rooms[0];        
+
+        Vector3 spawnPosition = new Vector3(startingRoom.GetCenter().x, startingRoom.GetCenter().y, 0);
+
+        // Handle player spawning
+        if (playerTransform != null)
+        {
+            // Use existing player
+            playerTransform.position = spawnPosition;
+            playerInstance = playerTransform.gameObject;
+            Debug.Log($"Moved existing player to room 0 at position: {spawnPosition}");
+        }
+        else if (playerPrefab != null)
+        {
+            // Spawn new player from prefab
+            playerInstance = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
+            Debug.Log($"Spawned new player in room 0 at position: {spawnPosition}");
+        }
+        else
+        {
+            // Create basic player GameObject
+            playerInstance = CreateBasicPlayer(spawnPosition);
+            Debug.Log($"Created basic player in room 0 at position: {spawnPosition}");
+        }
+
+        SetupCameraFollow();
+    }
+
+    GameObject CreateBasicPlayer(Vector3 position)
+    {
+        // Create a basic player GameObject
+        GameObject player = new GameObject("Player");
+        player.transform.position = position;
+
+        // Add visual representation
+        SpriteRenderer spriteRenderer = player.AddComponent<SpriteRenderer>();
+
+        // Create a simple colored square sprite
+        Texture2D playerTexture = new Texture2D(16, 16);
+        Color[] pixels = new Color[16 * 16];
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            pixels[i] = Color.blue;
+        }
+        playerTexture.SetPixels(pixels);
+        playerTexture.Apply();
+
+        Sprite playerSprite = Sprite.Create(playerTexture, new Rect(0, 0, 16, 16), new Vector2(0.5f, 0.5f), 16);
+        spriteRenderer.sprite = playerSprite;
+
+        // Add collider
+        BoxCollider2D collider = player.AddComponent<BoxCollider2D>();
+        collider.size = new Vector2(0.8f, 0.8f);
+
+        // Add player controller
+        PlayerController controller = player.AddComponent<PlayerController>();
+
+        return player;
+    }
+
+    void SetupCameraFollow()
+    {
+        if (playerInstance == null) return;
+
+        // Try to find main camera
+        Camera mainCamera = Camera.main;
+        if (mainCamera == null)
+        {
+            mainCamera = FindObjectOfType<Camera>();
+        }
+
+        if (mainCamera != null)
+        {
+            // Add a simple camera follow script if it doesn't exist
+            CameraFollow cameraFollow = mainCamera.GetComponent<CameraFollow>();
+            if (cameraFollow == null)
+            {
+                cameraFollow = mainCamera.gameObject.AddComponent<CameraFollow>();
+            }
+
+            cameraFollow.target = playerInstance.transform;
+
+            Debug.Log("Camera setup to follow player");
+        }
+    }
+
     void OnDrawGizmos()
     {
         if (rooms == null) return;
@@ -407,7 +510,8 @@ public class DungeonGenerator : MonoBehaviour
             Vector3 center = new Vector3(room.rect.center.x, room.rect.center.y, 0);
             Vector3 size = new Vector3(room.rect.width, room.rect.height, 0.1f);
 
-            Gizmos.color = Color.red;
+            // Highlight room 0 (starting room) in green
+            Gizmos.color = i == 0 ? Color.green : Color.red;
             Gizmos.DrawWireCube(center, size);
         }
     }
