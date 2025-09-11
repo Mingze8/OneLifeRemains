@@ -335,57 +335,9 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 81485915404393312, guid: f0056314902f99a4888d37e20d5db68c, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2941104004107833533, guid: f0056314902f99a4888d37e20d5db68c, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3277503834052071669, guid: f0056314902f99a4888d37e20d5db68c, type: 3}
-      propertyPath: bowWeapon
-      value: 
-      objectReference: {fileID: 21300000, guid: b703d7727b08947219074023baf91225, type: 3}
-    - target: {fileID: 3277503834052071669, guid: f0056314902f99a4888d37e20d5db68c, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3277503834052071669, guid: f0056314902f99a4888d37e20d5db68c, type: 3}
-      propertyPath: meleeWeapon
-      value: 
-      objectReference: {fileID: 21300000, guid: 83ce399493f9f4771b62359dc94f5010, type: 3}
-    - target: {fileID: 3277503834052071669, guid: f0056314902f99a4888d37e20d5db68c, type: 3}
-      propertyPath: weaponSocket
-      value: 
-      objectReference: {fileID: 1861605440}
-    - target: {fileID: 3277503834052071669, guid: f0056314902f99a4888d37e20d5db68c, type: 3}
-      propertyPath: facingDirection
-      value: -1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5578315087553011217, guid: f0056314902f99a4888d37e20d5db68c, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 5674993177752774652, guid: f0056314902f99a4888d37e20d5db68c, type: 3}
       propertyPath: m_Name
       value: Player
-      objectReference: {fileID: 0}
-    - target: {fileID: 5735615823670354517, guid: f0056314902f99a4888d37e20d5db68c, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6364948008212868201, guid: f0056314902f99a4888d37e20d5db68c, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6821217174301685498, guid: f0056314902f99a4888d37e20d5db68c, type: 3}
-      propertyPath: m_Simulated
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6821217174301685498, guid: f0056314902f99a4888d37e20d5db68c, type: 3}
-      propertyPath: m_Constraints
-      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 8932797011552829487, guid: f0056314902f99a4888d37e20d5db68c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -559,11 +511,6 @@ MonoBehaviour:
   m_CameraActivatedEvent:
     m_PersistentCalls:
       m_Calls: []
---- !u!4 &1861605440 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4950427818699686643, guid: f0056314902f99a4888d37e20d5db68c, type: 3}
-  m_PrefabInstance: {fileID: 1683246262}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
