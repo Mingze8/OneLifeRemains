@@ -774,7 +774,7 @@ MonoBehaviour:
   offset: 2
   roomFillRatio: 0.9
   centerBias: 0.1
-  playerPrefab: {fileID: 5836857197505123814, guid: d79d4337cea7c0c4b9fa1d525cfac93a, type: 3}
+  playerPrefab: {fileID: 5674993177752774652, guid: f0056314902f99a4888d37e20d5db68c, type: 3}
   playerTransform: {fileID: 0}
 --- !u!1 &1661834701
 GameObject:
@@ -849,7 +849,7 @@ TilemapRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: -1
   m_ChunkSize: {x: 32, y: 32, z: 32}
   m_ChunkCullingBounds: {x: 0, y: 0, z: 0}
   m_MaxChunkCount: 16
