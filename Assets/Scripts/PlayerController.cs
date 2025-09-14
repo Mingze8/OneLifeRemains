@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
@@ -13,7 +13,7 @@ public class PlayerController : MonoBehaviour
     public Sprite bowWeapon;
 
     private SpriteRenderer weaponRenderer;
-    private Sprite currentWeaponSprite;
+    private Sprite currentWeaponSprite;    
 
     private void Start()
     {
@@ -25,10 +25,10 @@ public class PlayerController : MonoBehaviour
         weaponRenderer.sprite = currentWeaponSprite;
     }
     
-    void Update()
-    {
-        float horizontal = Input.GetButton("Horizontal") ? (Input.GetKey(KeyCode.A) ? -1 : (Input.GetKey(KeyCode.D) ? 1 : 0)) : 0;
-        float vertical = Input.GetButton("Vertical") ? (Input.GetKey(KeyCode.W) ? 1 : (Input.GetKey(KeyCode.S) ? -1 : 0)) : 0;
+    void Update()        
+    {                
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
 
         if (horizontal > 0 && facingDirection < 0 ||
             horizontal < 0 && facingDirection > 0)
@@ -79,5 +79,5 @@ public class PlayerController : MonoBehaviour
     {
         facingDirection *= -1;
         transform.localScale = new Vector3 (transform.localScale.x * -1, transform.localScale.y, transform.localScale.z);
-    }
+    }    
 }
