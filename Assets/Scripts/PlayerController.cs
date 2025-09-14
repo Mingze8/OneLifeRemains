@@ -1,9 +1,9 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public float speed = 5;
-    public int facingDirection = -1;
+    public float speed = 5;    
+    public int facingDirection = 1;
     public Rigidbody2D rb;
 
     public Animator anim;
@@ -13,7 +13,7 @@ public class PlayerController : MonoBehaviour
     public Sprite bowWeapon;
 
     private SpriteRenderer weaponRenderer;
-    private Sprite currentWeaponSprite;
+    private Sprite currentWeaponSprite;    
 
     private void Start()
     {
@@ -25,21 +25,66 @@ public class PlayerController : MonoBehaviour
         weaponRenderer.sprite = currentWeaponSprite;
     }
     
-    void Update()
+    void Update()        
     {
-        float horizontal = Input.GetAxis("Horizontal");
-        float vertical = Input.GetAxis("Vertical");
+        //if (horizontal > 0 && facingDirection < 0 ||
+        //    horizontal < 0 && facingDirection > 0)
+        //{
+        //    Flip();
+        //}
 
-        if (horizontal > 0 && facingDirection < 0 ||
-            horizontal < 0 && facingDirection > 0)
+        HandleMovement();
+        HandleWeaponDirection();
+        handleCombat();
+        
+    }   
+
+    void HandleMovement()
+    {
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+
+        Vector2 movement = new Vector2(horizontal, vertical);
+        movement.Normalize();
+        anim.SetFloat("Speed", movement.magnitude);
+        rb.velocity = movement * speed;        
+    }
+
+    void HandleWeaponDirection()
+    {
+        // Get mouse position in world space
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+        // Calculate direction from player to mouse
+        Vector2 direction = (mousePos - transform.position).normalized;
+
+        // Rotate weapon to face the mouse direction
+        weaponRenderer.transform.up = direction;
+
+        flipCharacter(mousePos);
+    }
+
+    void flipCharacter(Vector3 mousePos)
+    {
+        // Check if the mouse is to the left or right of the player
+        if (mousePos.x < transform.position.x && facingDirection == 1)  // Mouse is left
         {
             Flip();
         }
+        else if (mousePos.x > transform.position.x && facingDirection == -1)  // Mouse is right
+        {
+            Flip();
+        }
+    }
 
-        Vector2 movement = new Vector2(horizontal, vertical);
-        anim.SetFloat("Speed", movement.magnitude);
-        rb.velocity = movement * speed;
+    void Flip()
+    {
+        facingDirection *= -1; // Update the facing direction
+        transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y, transform.localScale.z);
+    }
 
+    void handleCombat()
+    {
         // Weapon Switching
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
@@ -59,23 +104,17 @@ public class PlayerController : MonoBehaviour
             {
                 anim.SetTrigger("AttackMelee");
             }
-            else if (currentWeaponSprite == bowWeapon) 
+            else if (currentWeaponSprite == bowWeapon)
             {
                 anim.SetTrigger("AttackRanged");
             }
         }
-    }   
+    }
 
     void SwitchWeapon(Sprite newWeapon)
     {
         // Set the new sprite to the weapon renderer
         currentWeaponSprite = newWeapon;
         weaponRenderer.sprite = currentWeaponSprite;
-    }
-    
-    void Flip()
-    {
-        facingDirection *= -1;
-        transform.localScale = new Vector3 (transform.localScale.x * -1, transform.localScale.y, transform.localScale.z);
-    }
+    }   
 }
