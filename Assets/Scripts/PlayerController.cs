@@ -2,7 +2,8 @@
 
 public class PlayerController : MonoBehaviour
 {
-    public float speed = 5;    
+    public float initialSpeed = 5;
+    private float speed = 5;
     public int facingDirection = 1;
     public Rigidbody2D rb;
 
@@ -13,7 +14,7 @@ public class PlayerController : MonoBehaviour
     public Sprite bowWeapon;
 
     private SpriteRenderer weaponRenderer;
-    private Sprite currentWeaponSprite;    
+    private Sprite currentWeaponSprite;
 
     private void Start()
     {
@@ -24,20 +25,13 @@ public class PlayerController : MonoBehaviour
         currentWeaponSprite = meleeWeapon;
         weaponRenderer.sprite = currentWeaponSprite;
     }
-    
-    void Update()        
-    {
-        //if (horizontal > 0 && facingDirection < 0 ||
-        //    horizontal < 0 && facingDirection > 0)
-        //{
-        //    Flip();
-        //}
 
+    void Update()
+    {
         HandleMovement();
         HandleWeaponDirection();
         handleCombat();
-        
-    }   
+    }
 
     void HandleMovement()
     {
@@ -47,7 +41,7 @@ public class PlayerController : MonoBehaviour
         Vector2 movement = new Vector2(horizontal, vertical);
         movement.Normalize();
         anim.SetFloat("Speed", movement.magnitude);
-        rb.velocity = movement * speed;        
+        rb.velocity = movement * speed;
     }
 
     void HandleWeaponDirection()
@@ -103,10 +97,12 @@ public class PlayerController : MonoBehaviour
             if (currentWeaponSprite == meleeWeapon)
             {
                 anim.SetTrigger("AttackMelee");
+                speed = 3;
             }
             else if (currentWeaponSprite == bowWeapon)
             {
                 anim.SetTrigger("AttackRanged");
+                speed = 3;
             }
         }
     }
@@ -116,5 +112,10 @@ public class PlayerController : MonoBehaviour
         // Set the new sprite to the weapon renderer
         currentWeaponSprite = newWeapon;
         weaponRenderer.sprite = currentWeaponSprite;
-    }   
+    }
+
+    public void ResetSpeed()
+    {
+        speed = initialSpeed;
+    }
 }
