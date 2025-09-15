@@ -195,39 +195,89 @@ public class DungeonGenerator : MonoBehaviour
             connections.Add((Mathf.Min(roomA, roomB), Mathf.Max(roomA, roomB)));
         }
 
-        // Calculate corridor metrics before drawing
-        float totalCorridorLength = 0;
-        int totalCorridorTiles = 0;
-
         foreach (var connection in connections)
         {
             Vector2Int centerA = rooms[connection.Item1].GetCenter();
             Vector2Int centerB = rooms[connection.Item2].GetCenter();
 
-            float distance = Vector2Int.Distance(centerA, centerB);
-            totalCorridorLength += distance;
+            //  Get the edge of the rooms
+            List<Vector2Int> roomAEdges = GetRoomEdges(rooms[connection.Item1]);
+            List<Vector2Int> roomBEdges = GetRoomEdges(rooms[connection.Item2]);
 
-            // Count tiles for each corridor segment
-            var horizontalLine = GetLine(centerA, new Vector2Int(centerB.x, centerA.y));
-            var verticalLine = GetLine(new Vector2Int(centerB.x, centerA.y), centerB);
-            totalCorridorTiles += horizontalLine.Count + verticalLine.Count;
+            Vector2Int start = GetClosestEdge(roomAEdges, centerB);
+            Vector2Int end = GetClosestEdge(roomBEdges, centerA);
 
-            // Draw the corridor
-            foreach (var pos in horizontalLine)
+            GenerateCorridor(start, end);
+        }
+        
+        Debug.Log($"Connected all corridors and wall");
+    }
+
+    List<Vector2Int> GetRoomEdges(Room room)
+    {
+        List<Vector2Int> edges = new List<Vector2Int>();
+       
+        foreach (var pos in allFloorTiles)
+        {
+            if (room.rect.Contains(pos))
             {
-                corridorTilemap.SetTile((Vector3Int)pos, floorTile);
-                allCorridorTiles.Add(pos);
-            }
-            foreach (var pos in verticalLine)
-            {
-                corridorTilemap.SetTile((Vector3Int)pos, floorTile);
-                allCorridorTiles.Add(pos);
+                Vector2Int[] directions = {
+                Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
+                new Vector2Int(1, 1), new Vector2Int(1, -1), new Vector2Int(-1, 1), new Vector2Int(-1, -1)
+            };
+
+                foreach (var dir in directions)
+                {
+                    Vector2Int neighborPos = pos + dir;
+                    if (!allFloorTiles.Contains(neighborPos)) // if the neighbor is not a floor tile, it is an edge
+                    {
+                        edges.Add(pos);
+                        break;
+                    }
+                }
             }
         }
 
-        float avgCorridorLength = totalCorridorLength / connections.Count;
-        Debug.Log($"Connected {connections.Count} corridors");
-        Debug.Log($"Corridor Stats - Total Length: {totalCorridorLength:F1}, Avg: {avgCorridorLength:F1}, Tiles: {totalCorridorTiles}");
+        return edges;
+    }
+
+    Vector2Int GetClosestEdge(List<Vector2Int> edges, Vector2Int target)
+    {
+        Vector2Int closestEdge = edges[0];
+        float closestDistance = Vector2Int.Distance(closestEdge, target);
+
+        foreach (var edge in edges)
+        {
+            float distance = Vector2Int.Distance(edge, target);
+            if (distance < closestDistance)
+            {
+                closestEdge = edge;
+                closestDistance = distance;
+            }
+        }
+
+        return closestEdge;
+    }
+
+    void GenerateCorridor(Vector2Int start, Vector2Int end)
+    {
+        var horizontalLine = GetLine(start, new Vector2Int(end.x, start.y));
+        var verticalLine = GetLine(new Vector2Int(end.x, start.y), end);
+
+        // Setup tile
+        foreach (var pos in horizontalLine)
+        {
+            corridorTilemap.SetTile((Vector3Int)pos, floorTile);
+            allCorridorTiles.Add(pos);
+        }
+
+        foreach (var pos in verticalLine)
+        {
+            corridorTilemap.SetTile((Vector3Int)pos, floorTile);
+            allCorridorTiles.Add(pos);
+        }
+
+        Debug.Log($"Generated Corridor from {start} to {end}");
     }
 
     List<int> GetConnectionOrder(List<Room> rooms)
