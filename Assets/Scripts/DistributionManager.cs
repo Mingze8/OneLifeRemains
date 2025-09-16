@@ -16,6 +16,8 @@ public class DistributionManager : MonoBehaviour
     
     public void SpawnEnemy(List<Room> rooms, HashSet<Vector2Int> allFloorTiles, int offset)
     {
+        Debug.Log($"=== ENEMY SPAWN ===");
+
         if (enemies == null || enemies.Count == 0) return;
 
         if (showDebugLogs)

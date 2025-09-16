@@ -17,7 +17,7 @@ public class PlayerController : MonoBehaviour
     private Sprite currentWeaponSprite;
 
     private void Start()
-    {
+    {        
         // Get the SpriteRenderer component of the R_Weapon object
         weaponRenderer = GameObject.Find("R_Weapon").GetComponent<SpriteRenderer>();
 
