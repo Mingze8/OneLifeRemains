@@ -1559,6 +1559,8 @@ GameObject:
   - component: {fileID: 2138119612}
   - component: {fileID: 2138119610}
   - component: {fileID: 2138119611}
+  - component: {fileID: 2138119613}
+  - component: {fileID: 2138119614}
   m_Layer: 0
   m_Name: Door
   m_TagString: Untagged
@@ -1668,6 +1670,58 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1126083846}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!19719996 &2138119613
+TilemapCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2138119609}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_MaximumTileChangeCount: 1000
+  m_ExtrusionFactor: 0
+  m_UseDelaunayMesh: 0
+--- !u!114 &2138119614
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2138119609}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 985bea62f4f3b9544bcac9069165bc6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  doorTilemap: {fileID: 2138119610}
+  doorTileVertical: {fileID: 11400000, guid: a31028a227f9e4c47a3c3b2877ce9468, type: 2}
+  doorTileLeft: {fileID: 11400000, guid: 39e129a25f4a7f14d8f12d2a03f773b7, type: 2}
+  doorTileRight: {fileID: 11400000, guid: 685ab53fdbf85dc4c8616e1884647153, type: 2}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

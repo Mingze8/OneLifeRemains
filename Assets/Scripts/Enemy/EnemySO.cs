@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "New Enemy", menuName = "Game/Enemy")]
-public class Enemy : ScriptableObject
+public class EnemySO : ScriptableObject
 {
     public string enemyName;
     public int weight;

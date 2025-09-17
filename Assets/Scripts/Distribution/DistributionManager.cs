@@ -5,7 +5,7 @@ using UnityEngine;
 public class DistributionManager : MonoBehaviour
 {
     [Header("Enemy Settings")]
-    public List<Enemy> enemies; // List of enemy ScriptableObjects
+    public List<EnemySO> enemies; // List of enemy ScriptableObjects
 
     [Header("Spawn Settings")]
     public int minEnemiesPerRoom = 2;
@@ -105,7 +105,7 @@ public class DistributionManager : MonoBehaviour
         validPositions.RemoveAt(randomIndex);
 
         // Select a random enemy based on weight
-        Enemy selectedEnemy = WeightedRandom.SelectRandom(enemies, enemy => enemy.weight);
+        EnemySO selectedEnemy = WeightedRandom.SelectRandom(enemies, enemy => enemy.weight);
 
         if (selectedEnemy != null && selectedEnemy.enemyPrefab != null)
         {

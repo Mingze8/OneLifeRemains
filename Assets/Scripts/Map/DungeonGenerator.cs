@@ -10,15 +10,15 @@ public class DungeonGenerator : MonoBehaviour
     [Header("Tilemaps")]
     public Tilemap tilemap;
     public Tilemap wallTilemap;
-    public Tilemap corridorTilemap;
-    public Tilemap doorTilemap;
+    public Tilemap corridorTilemap;    
     public TileBase floorTile;
     public TileBase defaultWallTile;
 
-    [Header("Door Tiles")]
-    public TileBase doorTileVertical;
-    public TileBase doorTileLeft;
-    public TileBase doorTileRight;
+    [Header("Door Objects")]
+    public GameObject verticalDoor;
+    public GameObject leftDoor;
+    public GameObject rightDoor;
+    public GameObject doorFolder;
 
     [Header("Map Settings")]
     public int mapWidth = 80;
@@ -43,6 +43,8 @@ public class DungeonGenerator : MonoBehaviour
     private HashSet<Vector2Int> allFloorTiles;
     private HashSet<Vector2Int> allWallTiles;
     private HashSet<Vector2Int> allCorridorTiles;
+
+    private List<GameObject> doorInstances = new List<GameObject>();
 
     private bool needRegenerate = false;
 
@@ -96,7 +98,7 @@ public class DungeonGenerator : MonoBehaviour
         tilemap.ClearAllTiles();
         wallTilemap.ClearAllTiles();
         corridorTilemap.ClearAllTiles();
-        doorTilemap.ClearAllTiles();
+        ClearAllDoors();
 
         allFloorTiles.Clear();
         allWallTiles.Clear();
@@ -516,9 +518,13 @@ public class DungeonGenerator : MonoBehaviour
             {
                 if (IsSuitableForDoorWithNextCheck(currentPos, currentDirection))
                 {
-                    TileBase selectedDoorTile = GetDoorTileByDirection(currentDirection);
+                    GameObject selectedDoor = GetDoorTypeByDirection(currentDirection);
+                    Vector3 worldPosition = tilemap.CellToWorld(new Vector3Int(currentPos.x, currentPos.y, 0));
 
-                    doorTilemap.SetTile((Vector3Int)currentPos, selectedDoorTile);
+                    GameObject door = Instantiate(selectedDoor, worldPosition, Quaternion.identity);
+                    door.transform.SetParent(doorFolder.transform);
+                    doorInstances.Add(door);
+
                     Debug.Log($"Successfully placed door at: {currentPos} (attempt {attempt + 1})");
                     return;
                 }
@@ -674,22 +680,33 @@ public class DungeonGenerator : MonoBehaviour
     }
 
     // Get the tile for door by direction
-    TileBase GetDoorTileByDirection(Vector2Int direction)
+    GameObject GetDoorTypeByDirection(Vector2Int direction)
     {
         if (direction == Vector2Int.up || direction == Vector2Int.down)
         {
-            return doorTileVertical;
+            return verticalDoor;
         }            
         else if (direction == Vector2Int.left)
         {
-            return doorTileLeft;
+            return leftDoor;
         }            
         else if (direction == Vector2Int.right)
         {
-            return doorTileRight;
+            return rightDoor;
         }
 
-        return doorTileVertical;
+        return verticalDoor;
+    }
+
+    // Clear all door
+    void ClearAllDoors()
+    {
+        foreach(GameObject door in doorInstances)
+        {
+            Destroy(door);
+        }
+
+        doorInstances.Clear();
     }
 
     // -----------------------------------------------   DOOR GENERATION PART - END  ----------------------------------------------- //
