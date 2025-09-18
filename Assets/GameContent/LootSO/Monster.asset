@@ -12,9 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 0}
   m_Name: Monster
   m_EditorClassIdentifier: Assembly-CSharp::EnemyLootSO
-  lootName: 
-  itemIcon: {fileID: 0}
-  description: 
-  possibleEnemies: []
-  minEnemyCount: 0
-  maxEnemyCount: 0
+  lootName: Enemy
+  weight: 5
+  possibleEnemies:
+  - {fileID: 11400000, guid: 83e32850bb0dbf84e876b51d01888024, type: 2}
+  - {fileID: 11400000, guid: 86afd8abb84066a47ba3c6a172fe4828, type: 2}
+  minEnemyCount: 1
+  maxEnemyCount: 2

@@ -1344,6 +1344,11 @@ MonoBehaviour:
   minLootChestsPerRoom: 1
   maxLootChestsPerRoom: 2
   showDebugLogs: 1
+  availableLoot:
+  - {fileID: 11400000, guid: 54b67583087235b4d935c0034dbd9115, type: 2}
+  - {fileID: 11400000, guid: 829daf3e1a546874fa6519f147214382, type: 2}
+  minLootItems: 1
+  maxLootItems: 3
 --- !u!4 &1791916535
 Transform:
   m_ObjectHideFlags: 0

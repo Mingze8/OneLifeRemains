@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4859b5bf683d950429e2c53ac6aef6a2, type: 3}
   m_Name: Dagger
   m_EditorClassIdentifier: 
-  weaponName: 
-  weight: 0
-  weaponPrefab: {fileID: 0}
+  weaponName: Dagger
+  weight: 5
+  weaponPrefab: {fileID: 1941636751970302256, guid: b329a18fc23e3814e9c0fcf5dea0475a, type: 3}
