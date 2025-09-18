@@ -76,4 +76,9 @@ public class LootChestInteraction : MonoBehaviour
     {        
         distributionManager.OnChestOpened(gameObject);
     }
+
+    public void destroyChest()
+    {
+        Destroy(gameObject);
+    }
 }

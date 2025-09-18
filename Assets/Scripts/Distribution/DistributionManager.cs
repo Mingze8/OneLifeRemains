@@ -494,8 +494,7 @@ public class DistributionManager : MonoBehaviour
 
         LootChestSO chestData = null;
 
-        DistributeLootAtPosition(chestPosition, chestData);
-        Destroy(chest);
+        DistributeLootAtPosition(chestPosition, chestData);        
     }
 
     // -----------------------------------------------  CHEST LOOT DISTRIBUTION PART - END  ----------------------------------------------- //
