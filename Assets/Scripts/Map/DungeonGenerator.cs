@@ -80,9 +80,8 @@ public class DungeonGenerator : MonoBehaviour
 
         GenerateWalls();
         SpawnPlayer();
-
-        distributionManager.ClearAlLEnemies();
-        distributionManager.SpawnEnemy(rooms, allFloorTiles, offset);
+        
+        distributionManager.SpawnContent(rooms, allFloorTiles, offset);
 
         LogOverallDungeonMetrics();
 
@@ -106,7 +105,8 @@ public class DungeonGenerator : MonoBehaviour
 
         rooms.Clear();
 
-        distributionManager.ClearAlLEnemies();
+        distributionManager.ClearAllEnemies();
+        distributionManager.ClearAllLootChests();
 
         GenerateDungeon();
     }
