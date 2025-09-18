@@ -169,6 +169,9 @@ public class DistributionManager : MonoBehaviour
             //Instantiate the selected enemy
             GameObject spawnedEnemy = Instantiate(selectedEnemy.enemyPrefab, worldPosition, Quaternion.identity);
 
+            // Attach FSM to the enemy
+            EnemyFSM enemyFSM = spawnedEnemy.GetComponent<EnemyFSM>();
+
             spawnedEnemy.transform.SetParent(roomParentTransform);
 
             //if (showDebugLogs)

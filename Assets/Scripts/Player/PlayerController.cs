@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
@@ -8,6 +9,7 @@ public class PlayerController : MonoBehaviour
     public Rigidbody2D rb;
 
     public Animator anim;
+    private bool isStunned;
 
     [Header("Weapon")]
     public GameObject meleeWeapon;
@@ -26,9 +28,12 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        HandleMovement();
-        HandleWeaponDirection();
-        handleCombat();
+        if (!isStunned)
+        {
+            HandleMovement();
+            HandleWeaponDirection();
+            handleCombat();
+        }        
     }
 
     void HandleMovement()
@@ -116,5 +121,19 @@ public class PlayerController : MonoBehaviour
     public void ResetSpeed()
     {
         speed = initialSpeed;
+    }
+
+    public void Stunned(float stunTime)
+    {
+        isStunned = true;        
+        StartCoroutine(stunCounter(stunTime));
+
+        IEnumerator stunCounter(float stunTime)
+        {
+            anim.SetBool("isStunned", true);
+            yield return new WaitForSeconds(stunTime);
+            anim.SetBool("isStunned", false);
+            isStunned = false;            
+        }
     }
 }
