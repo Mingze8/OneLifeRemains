@@ -7,6 +7,9 @@ using UnityEditor;
 
 public class DungeonGenerator : MonoBehaviour
 {
+    [Header("Room Management")]
+    public RoomManager roomManager;
+
     [Header("Tilemaps")]
     public Tilemap tilemap;
     public Tilemap wallTilemap;
@@ -24,6 +27,7 @@ public class DungeonGenerator : MonoBehaviour
     public int mapWidth = 80;
     public int mapHeight = 80;
     public int minRoomSize = 20;
+    public int roomCount = 8;
     public int offset = 2;
 
     [Range(0.3f, 1f)]
@@ -59,9 +63,9 @@ public class DungeonGenerator : MonoBehaviour
         allFloorTiles = new HashSet<Vector2Int>();
         allWallTiles = new HashSet<Vector2Int>();
         allCorridorTiles = new HashSet<Vector2Int>();
-        
+
         RectInt dungeonArea = new RectInt(0, 0, mapWidth, mapHeight);
-        rooms = BSPGenerator.GenerateRooms(dungeonArea, minRoomSize, 8);       
+        rooms = BSPGenerator.GenerateRooms(dungeonArea, minRoomSize, roomCount);
 
         Debug.Log($"=== DUNGEON GENERATION STARTED ===");
         Debug.Log($"Target: {rooms.Count} rooms on {mapWidth}x{mapHeight} map");
@@ -73,7 +77,7 @@ public class DungeonGenerator : MonoBehaviour
         }
 
         bool corridorSuccess = ConnectRoomsWithCorridors(rooms);
-        if(!corridorSuccess)
+        if (!corridorSuccess)
         {
             return;
         }
@@ -81,8 +85,10 @@ public class DungeonGenerator : MonoBehaviour
         GenerateWalls();
         SpawnPlayer();
 
-        distributionManager.ClearAlLEnemies();
-        distributionManager.SpawnEnemy(rooms, allFloorTiles, offset);
+        distributionManager.SpawnContent(rooms, allFloorTiles, offset);
+
+        // Initialize room management after everything is spawned
+        InitializeRoomManager();
 
         LogOverallDungeonMetrics();
 
@@ -92,7 +98,6 @@ public class DungeonGenerator : MonoBehaviour
     // To regenerate dungeon while some condition met
     public void RegenerateDungeon()
     {
-        // Clear the current dungeon
         Debug.Log("=== REGENERATING DUNGEON ===");
 
         tilemap.ClearAllTiles();
@@ -106,9 +111,29 @@ public class DungeonGenerator : MonoBehaviour
 
         rooms.Clear();
 
-        distributionManager.ClearAlLEnemies();
+        distributionManager.ClearAllEnemies();
+        distributionManager.ClearAllLootChests();
 
         GenerateDungeon();
+    }
+
+    private void InitializeRoomManager()
+    {
+        if (roomManager == null)
+        {
+            // Create RoomManager if it doesn't exist
+            GameObject roomManagerObj = new GameObject("RoomManager");
+            roomManager = roomManagerObj.AddComponent<RoomManager>();
+        }
+
+        // Set up the room manager
+        roomManager.rooms = rooms;
+        roomManager.player = playerInstance.transform;
+
+        // Initialize the room tracking system
+        roomManager.InitializeRoomTracking();
+
+        Debug.Log("Room management system initialized");
     }
 
     // -----------------------------------------------   ROOM GENERATION PART - START  ----------------------------------------------- //
@@ -789,7 +814,7 @@ public class DungeonGenerator : MonoBehaviour
         // Get the first room
         Room startingRoom = rooms[0];        
 
-        Vector3 spawnPosition = new Vector3(startingRoom.GetCenter().x, startingRoom.GetCenter().y, 0);        
+        Vector3 spawnPosition = new Vector3(startingRoom.GetCenter().x + 0.5f, startingRoom.GetCenter().y + 0.25f, 0);        
 
         if (playerInstance != null)
         {
@@ -827,6 +852,12 @@ public class DungeonGenerator : MonoBehaviour
 
 
     // -----------------------------------------------   DUNGEON QUALITY METRICS & DEBUGGING PART - START  ----------------------------------------------- //
+
+    // Return the set of all floor tiles
+    public HashSet<Vector2Int> GetAllFloorTiles()
+    {
+        return allFloorTiles;
+    }
 
     // Logs various statistics about the dungeon
     void LogOverallDungeonMetrics()

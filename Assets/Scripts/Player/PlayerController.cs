@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
@@ -8,29 +9,31 @@ public class PlayerController : MonoBehaviour
     public Rigidbody2D rb;
 
     public Animator anim;
+    private bool isStunned;
 
     [Header("Weapon")]
-    public Sprite meleeWeapon;
-    public Sprite bowWeapon;
+    public GameObject meleeWeapon;
+    public GameObject bowWeapon;
 
-    private SpriteRenderer weaponRenderer;
-    private Sprite currentWeaponSprite;
+    private GameObject currentWeapon;
+    private Transform weaponParent;
 
     private void Start()
-    {        
-        // Get the SpriteRenderer component of the R_Weapon object
-        weaponRenderer = GameObject.Find("R_Weapon").GetComponent<SpriteRenderer>();
+    {
+        weaponParent = GameObject.Find("P_Weapon_Right").transform;
 
-        // Set the default weapon sprite
-        currentWeaponSprite = meleeWeapon;
-        weaponRenderer.sprite = currentWeaponSprite;
+        currentWeapon = Instantiate(meleeWeapon, weaponParent);        
+        currentWeapon.SetActive(true);        
     }
 
     void Update()
     {
-        HandleMovement();
-        HandleWeaponDirection();
-        handleCombat();
+        if (!isStunned)
+        {
+            HandleMovement();
+            HandleWeaponDirection();
+            handleCombat();
+        }        
     }
 
     void HandleMovement()
@@ -53,9 +56,9 @@ public class PlayerController : MonoBehaviour
         Vector2 direction = (mousePos - transform.position).normalized;
 
         // Rotate weapon to face the mouse direction
-        weaponRenderer.transform.up = direction;
+        currentWeapon.transform.up = direction;
 
-        flipCharacter(mousePos);
+        flipCharacter(mousePos);        
     }
 
     void flipCharacter(Vector3 mousePos)
@@ -68,13 +71,13 @@ public class PlayerController : MonoBehaviour
         else if (mousePos.x > transform.position.x && facingDirection == -1)  // Mouse is right
         {
             Flip();
-        }
+        }        
     }
 
     void Flip()
     {
         facingDirection *= -1; // Update the facing direction
-        transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y, transform.localScale.z);
+        transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y, transform.localScale.z);        
     }
 
     void handleCombat()
@@ -94,12 +97,12 @@ public class PlayerController : MonoBehaviour
         // Combat Input
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-            if (currentWeaponSprite == meleeWeapon)
+            if (currentWeapon.CompareTag("Melee"))
             {
                 anim.SetTrigger("AttackMelee");
                 speed = 3;
             }
-            else if (currentWeaponSprite == bowWeapon)
+            else if (currentWeapon.CompareTag("Ranged"))
             {
                 anim.SetTrigger("AttackRanged");
                 speed = 3;
@@ -107,15 +110,30 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void SwitchWeapon(Sprite newWeapon)
+    void SwitchWeapon(GameObject newWeapon)
     {
         // Set the new sprite to the weapon renderer
-        currentWeaponSprite = newWeapon;
-        weaponRenderer.sprite = currentWeaponSprite;
+        Destroy(currentWeapon);
+        currentWeapon = Instantiate(newWeapon, weaponParent);
+        currentWeapon.SetActive(true);
     }
 
     public void ResetSpeed()
     {
         speed = initialSpeed;
+    }
+
+    public void Stunned(float stunTime)
+    {
+        isStunned = true;        
+        StartCoroutine(stunCounter(stunTime));
+
+        IEnumerator stunCounter(float stunTime)
+        {
+            anim.SetBool("isStunned", true);
+            yield return new WaitForSeconds(stunTime);
+            anim.SetBool("isStunned", false);
+            isStunned = false;            
+        }
     }
 }
