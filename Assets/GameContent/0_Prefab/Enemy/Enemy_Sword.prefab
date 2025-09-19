@@ -4888,10 +4888,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   patrolChancePerSecond: 0.5
   patrolSpeed: 1
-  patrolWaitTime: 0
-  forceAwayFromEnemies: 0.5
-  chaseSpeed: 1
-  playerDetectRange: 2
+  chaseSpeed: 3
+  pathUpdateInterval: 0.5
+  chasePathThreshold: 0.4
+  playerDetectRange: 5
   detectionPoint: {fileID: 7470287272718566291}
   playerLayer:
     serializedVersion: 2

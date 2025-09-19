@@ -41,6 +41,13 @@ public class EnemyFSM : MonoBehaviour
 
     [Header("Chase Settings")]
     public float chaseSpeed;
+    public float pathUpdateInterval = 0.5f;
+    public float chasePathThreshold = 0.3f;
+
+    private List<Vector2Int> chasePath;
+    private int currentChasePointIndex;
+    private float lastChasePathUpdate;
+    private bool isChasing = false;
 
     [Header("Detection Area")]
     public float playerDetectRange = 5;
@@ -195,7 +202,7 @@ public class EnemyFSM : MonoBehaviour
             while (Vector2.Distance(transform.position, targetPosition) > 0.1f && isRoomActive)
             {
                 Vector2 direction = (targetPosition - transform.position).normalized;
-                rb.velocity = direction * patrolSpeed;
+                rb.velocity = direction * patrolSpeed;                
                 yield return null;
             }
 
@@ -224,16 +231,101 @@ public class EnemyFSM : MonoBehaviour
     // Move the enemy towards the player when in Chasing state, and flip direction if necessary.
     private void HandleChasingState()
     {
-        if (!isRoomActive) return;
+        if (!isRoomActive || player == null) return;
 
-        if (player.position.x > transform.position.x && facingDirection == 1 ||
-            player.position.x < transform.position.x && facingDirection == -1)
+        // Check if need to update chasing path
+        bool shouldUpdatePath = false;
+
+        // if no path or over the path update interval
+        if (chasePath == null || chasePath.Count == 0 ||
+        Time.time - lastChasePathUpdate > pathUpdateInterval)
         {
-            Flip();
+            shouldUpdatePath = true;
         }
 
-        Vector2 direction = (player.position - transform.position).normalized;
-        rb.velocity = direction * chaseSpeed;
+        // if current path is finished
+        if (chasePath != null && currentChasePointIndex >= chasePath.Count)
+        {
+            shouldUpdatePath = true;
+        }
+
+        if (shouldUpdatePath)
+        {
+            UpdateChasePath();
+        }
+
+        // Chase follow path or backup plan (direct chasing)
+        if (chasePath != null && chasePath.Count > 0 && currentChasePointIndex < chasePath.Count)
+        {
+            ChaseAlongPath();
+        }
+        else
+        {            
+            Vector2 direction = (player.position - transform.position).normalized;
+            rb.velocity = direction * chaseSpeed;
+            HandleChaseFlip(direction);
+        }
+        
+        //if (player.position.x > transform.position.x && facingDirection == 1 ||
+        //    player.position.x < transform.position.x && facingDirection == -1)
+        //{
+        //    Flip();
+        //}
+
+        //Vector2 direction = (player.position - transform.position).normalized;
+        //rb.velocity = direction * chaseSpeed;
+    }
+
+    private void UpdateChasePath()
+    {
+        if (pathfinding == null) return;
+
+        Vector2Int enemyPos = new Vector2Int(Mathf.FloorToInt(transform.position.x), Mathf.FloorToInt(transform.position.y));
+        Vector2Int playerPos = new Vector2Int(Mathf.FloorToInt(player.position.x), Mathf.FloorToInt(player.position.y));
+
+        List<Vector2Int> newPath = pathfinding.FindPath(enemyPos, playerPos);
+
+        if (newPath != null && newPath.Count > 0)
+        {
+            chasePath = newPath;
+            currentChasePointIndex = 0;
+            lastChasePathUpdate = Time.time;
+        }
+        else
+        {            
+            chasePath = null;
+        }
+    }
+
+    private void ChaseAlongPath()
+    {
+        Vector3 targetPosition = new Vector3(
+            chasePath[currentChasePointIndex].x + 0.5f,
+            chasePath[currentChasePointIndex].y + 0.25f,
+            transform.position.z
+        );
+
+        Vector2 direction = (targetPosition - transform.position).normalized;
+        rb.velocity = direction * chaseSpeed;        
+
+        HandleChaseFlip(direction);
+        
+        if (Vector2.Distance(transform.position, targetPosition) < chasePathThreshold)
+        {
+            currentChasePointIndex++;
+        }
+    }
+
+    private void HandleChaseFlip(Vector2 moveDirection)
+    {
+        if (Mathf.Abs(moveDirection.x) > 0.1f)
+        {
+            if (player.position.x > transform.position.x && facingDirection == 1 ||
+                player.position.x < transform.position.x && facingDirection == -1)
+            {
+                Flip();
+            }
+        }
     }
 
     // Flip the enemy’s facing direction.
@@ -264,7 +356,7 @@ public class EnemyFSM : MonoBehaviour
         Collider2D[] hits = Physics2D.OverlapCircleAll(detectionPoint.position, playerDetectRange, playerLayer);
 
         if (hits.Length > 0)
-        {
+        {            
             player = hits[0].transform;
 
             if (Vector2.Distance(transform.position, player.transform.position) <= attackRange && attackCooldownTimer <= 0)
@@ -272,7 +364,7 @@ public class EnemyFSM : MonoBehaviour
                 attackCooldownTimer = attackCooldown;
                 ChangeState(EnemyState.Attacking);
             }
-            else if (Vector2.Distance(transform.position, player.position) > attackRange && currentState != EnemyState.Attacking)
+            else if (Vector2.Distance(transform.position, player.position) > attackRange && currentState != EnemyState.Attacking && currentState != EnemyState.Chasing)
             {
                 ChangeState(EnemyState.Chasing);
             }
@@ -280,7 +372,7 @@ public class EnemyFSM : MonoBehaviour
         else
         {
             if (currentState == EnemyState.Chasing || currentState == EnemyState.Attacking)
-            {
+            {                
                 rb.velocity = Vector2.zero;
                 ChangeState(EnemyState.Idle);
             }
@@ -302,6 +394,9 @@ public class EnemyFSM : MonoBehaviour
         else if (currentState == EnemyState.Chasing)
         {
             anim.SetBool("isMoving", false);
+            chasePath = null;
+            currentChasePointIndex = 0;
+            isChasing = false;
         }
         else if (currentState == EnemyState.Attacking)
         {
@@ -326,6 +421,8 @@ public class EnemyFSM : MonoBehaviour
         else if (currentState == EnemyState.Chasing)
         {
             anim.SetBool("isMoving", true);
+            isChasing = true;
+            UpdateChasePath();
         }
         else if (currentState == EnemyState.Attacking)
         {
@@ -399,6 +496,28 @@ public class EnemyFSM : MonoBehaviour
                 Vector3 start = new Vector3(patrolPath[i].x + 0.5f, patrolPath[i].y + 0.25f, 0);
                 Vector3 end = new Vector3(patrolPath[i + 1].x + 0.5f, patrolPath[i + 1].y + 0.25f, 0);
                 Gizmos.DrawLine(start, end);
+            }
+        }
+
+        if (chasePath != null && chasePath.Count > 0)
+        {
+            Gizmos.color = Color.red;
+            for (int i = currentChasePointIndex; i < chasePath.Count - 1; i++)
+            {
+                Vector3 start = new Vector3(chasePath[i].x + 0.5f, chasePath[i].y + 0.25f, 0);
+                Vector3 end = new Vector3(chasePath[i + 1].x + 0.5f, chasePath[i + 1].y + 0.25f, 0);
+                Gizmos.DrawLine(start, end);
+            }
+            
+            if (currentChasePointIndex < chasePath.Count)
+            {
+                Vector3 currentTarget = new Vector3(
+                    chasePath[currentChasePointIndex].x + 0.5f,
+                    chasePath[currentChasePointIndex].y + 0.25f,
+                    0
+                );
+                Gizmos.color = Color.blue;
+                Gizmos.DrawWireSphere(currentTarget, 0.2f);
             }
         }
 
