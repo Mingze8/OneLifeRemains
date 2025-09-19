@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 public enum EnemyState
 {
@@ -121,6 +117,17 @@ public class EnemyFSM : MonoBehaviour
         }
     }
 
+    // Flip the enemy’s facing direction.
+    void Flip()
+    {
+        facingDirection *= -1;
+        transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y, transform.localScale.z);
+    }
+
+
+    // -----------------------------------------------   ENEMY INACTIVE STATE - START  ----------------------------------------------- //
+
+
     // Stop movement and animations when the room is inactive.
     private void HandleRoomInactiveState()
     {
@@ -136,6 +143,12 @@ public class EnemyFSM : MonoBehaviour
         }
     }
 
+    // -----------------------------------------------   ENEMY INACTIVE STATE - END  ----------------------------------------------- //
+
+
+    // -----------------------------------------------   ENEMY IDLE STATE - START  ----------------------------------------------- //
+
+
     // Handle transition from Idle to Patrolling based on random chance.
     private void HandleIdleState()
     {
@@ -147,6 +160,13 @@ public class EnemyFSM : MonoBehaviour
             ChangeState(EnemyState.Patrolling);
         }
     }
+
+
+    // -----------------------------------------------   ENEMY IDLE STATE - END  ----------------------------------------------- //
+
+
+    // -----------------------------------------------   ENEMY PATROL STATE - START  ----------------------------------------------- //
+
 
     // Transition to Patrolling state, choose random patrol point, and start pathfinding.
     public void EnterPatrollingState()
@@ -166,8 +186,7 @@ public class EnemyFSM : MonoBehaviour
 
         // Ensure we got a valid path
         if (path == null || path.Count == 0)
-        {
-            Debug.LogWarning("No valid patrol path found!");
+        {            
             ChangeState(EnemyState.Idle);
             return;
         }
@@ -228,7 +247,14 @@ public class EnemyFSM : MonoBehaviour
         return floorTilesList[UnityEngine.Random.Range(0, floorTilesList.Count)];
     }
 
-    // Move the enemy towards the player when in Chasing state, and flip direction if necessary.
+
+    // -----------------------------------------------   ENEMY PATROL STATE - END  ----------------------------------------------- //
+
+
+    // -----------------------------------------------   ENEMY CHASING STATE - START  ----------------------------------------------- //
+
+
+    // Move the enemy towards the player in Chasing state.
     private void HandleChasingState()
     {
         if (!isRoomActive || player == null) return;
@@ -265,17 +291,9 @@ public class EnemyFSM : MonoBehaviour
             rb.velocity = direction * chaseSpeed;
             HandleChaseFlip(direction);
         }
-        
-        //if (player.position.x > transform.position.x && facingDirection == 1 ||
-        //    player.position.x < transform.position.x && facingDirection == -1)
-        //{
-        //    Flip();
-        //}
-
-        //Vector2 direction = (player.position - transform.position).normalized;
-        //rb.velocity = direction * chaseSpeed;
     }
 
+    // Recalculate and update the chase path to follow the player.
     private void UpdateChasePath()
     {
         if (pathfinding == null) return;
@@ -297,6 +315,7 @@ public class EnemyFSM : MonoBehaviour
         }
     }
 
+    // Move the enemy along the chase path and update the current chase point.
     private void ChaseAlongPath()
     {
         Vector3 targetPosition = new Vector3(
@@ -316,6 +335,7 @@ public class EnemyFSM : MonoBehaviour
         }
     }
 
+    // Flip the enemy’s facing direction based on the chase movement.
     private void HandleChaseFlip(Vector2 moveDirection)
     {
         if (Mathf.Abs(moveDirection.x) > 0.1f)
@@ -328,12 +348,12 @@ public class EnemyFSM : MonoBehaviour
         }
     }
 
-    // Flip the enemy’s facing direction.
-    void Flip()
-    {
-        facingDirection *= -1;
-        transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y, transform.localScale.z);
-    }
+
+    // -----------------------------------------------   ENEMY CHASING STATE - END  ----------------------------------------------- //
+
+
+    // -----------------------------------------------   ENEMY ATTACK STATE - START  ----------------------------------------------- //
+
 
     // Stop movement and set the attack animation when in Attacking state.
     private void HandleAttackingState()
@@ -342,11 +362,22 @@ public class EnemyFSM : MonoBehaviour
         rb.velocity = Vector2.zero;
     }
 
+
+    // -----------------------------------------------   ENEMY ATTACK STATE - END  ----------------------------------------------- //
+
+
+    // -----------------------------------------------   ENEMY DEAD STATE - START  ----------------------------------------------- //
+
+
     // Handle the enemy’s behavior when in Dead state
     private void HandleDeadState()
     {
 
     }
+
+
+    // -----------------------------------------------   ENEMY DEAD STATE - END  ----------------------------------------------- //
+
 
     // Detect the player and change state to Attacking if in range, or Chasing if out of range.
     private void CheckForPlayer()
@@ -436,7 +467,7 @@ public class EnemyFSM : MonoBehaviour
     }
 
 
-    // ================ ROOM MANAGEMENT PUBLIC METHOD ================ //
+    // -----------------------------------------------   ROOM MANAGER PUBLIC METHOD  ----------------------------------------------- //
 
     // Set the index of the room the enemy is currently in.
     public void SetRoomIndex(int roomIndex)
