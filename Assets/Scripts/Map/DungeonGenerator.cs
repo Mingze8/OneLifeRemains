@@ -7,6 +7,9 @@ using UnityEditor;
 
 public class DungeonGenerator : MonoBehaviour
 {
+    [Header("Room Management")]
+    public RoomManager roomManager;
+
     [Header("Tilemaps")]
     public Tilemap tilemap;
     public Tilemap wallTilemap;
@@ -60,9 +63,9 @@ public class DungeonGenerator : MonoBehaviour
         allFloorTiles = new HashSet<Vector2Int>();
         allWallTiles = new HashSet<Vector2Int>();
         allCorridorTiles = new HashSet<Vector2Int>();
-        
+
         RectInt dungeonArea = new RectInt(0, 0, mapWidth, mapHeight);
-        rooms = BSPGenerator.GenerateRooms(dungeonArea, minRoomSize, roomCount);       
+        rooms = BSPGenerator.GenerateRooms(dungeonArea, minRoomSize, roomCount);
 
         Debug.Log($"=== DUNGEON GENERATION STARTED ===");
         Debug.Log($"Target: {rooms.Count} rooms on {mapWidth}x{mapHeight} map");
@@ -74,15 +77,18 @@ public class DungeonGenerator : MonoBehaviour
         }
 
         bool corridorSuccess = ConnectRoomsWithCorridors(rooms);
-        if(!corridorSuccess)
+        if (!corridorSuccess)
         {
             return;
         }
 
         GenerateWalls();
         SpawnPlayer();
-        
+
         distributionManager.SpawnContent(rooms, allFloorTiles, offset);
+
+        // Initialize room management after everything is spawned
+        InitializeRoomManager();
 
         LogOverallDungeonMetrics();
 
@@ -92,7 +98,6 @@ public class DungeonGenerator : MonoBehaviour
     // To regenerate dungeon while some condition met
     public void RegenerateDungeon()
     {
-        // Clear the current dungeon
         Debug.Log("=== REGENERATING DUNGEON ===");
 
         tilemap.ClearAllTiles();
@@ -110,6 +115,25 @@ public class DungeonGenerator : MonoBehaviour
         distributionManager.ClearAllLootChests();
 
         GenerateDungeon();
+    }
+
+    private void InitializeRoomManager()
+    {
+        if (roomManager == null)
+        {
+            // Create RoomManager if it doesn't exist
+            GameObject roomManagerObj = new GameObject("RoomManager");
+            roomManager = roomManagerObj.AddComponent<RoomManager>();
+        }
+
+        // Set up the room manager
+        roomManager.rooms = rooms;
+        roomManager.player = playerInstance.transform;
+
+        // Initialize the room tracking system
+        roomManager.InitializeRoomTracking();
+
+        Debug.Log("Room management system initialized");
     }
 
     // -----------------------------------------------   ROOM GENERATION PART - START  ----------------------------------------------- //

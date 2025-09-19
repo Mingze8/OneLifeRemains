@@ -13,7 +13,8 @@ public enum EnemyState
     Patrolling,
     Chasing,
     Attacking,
-    Dead
+    Dead,
+    RoomInactive
 }
 
 public class EnemyFSM : MonoBehaviour
@@ -21,17 +22,18 @@ public class EnemyFSM : MonoBehaviour
     private DungeonGenerator dungeonGenerator;
     private HashSet<Vector2Int> allFloorTiles;
 
+    [Header("Room Management")]
+    private int myRoomIndex = -1;
+    private bool isRoomActive = true;
+    private EnemyState stateBeforeInactive;
+
     [Header("Idle Settings")]
-    public float idleDuration = 3f;
-    private float idleTimer;
+    [Range(0f, 1f)]
+    public float patrolChancePerSecond = 0.5f;
 
     [Header("Patrol Settings")]
-    public float patrolSpeed = 2f;
-    public float patrolWaitTime = 3f;
-    public float forceAwayFromEnemies = 0.5f;
-
-    private float patrolTimer;
-    private Vector2 currentTargetPosition;
+    public float patrolSpeed = 2f;     
+    
     private AStarPathfinding pathfinding;
     private List<Vector2Int> patrolPath;
     private int currentPatrolPointIndex;
@@ -57,29 +59,40 @@ public class EnemyFSM : MonoBehaviour
 
     private Animator anim;
 
+    // Initialize components and set initial state to Idle.
     private void Start()
     {
         dungeonGenerator = FindObjectOfType<DungeonGenerator>();
         if (dungeonGenerator != null)
         {
-            allFloorTiles = dungeonGenerator.GetAllFloorTiles(); // Access the floor tiles from DungeonGenerator
+            allFloorTiles = dungeonGenerator.GetAllFloorTiles();
             Debug.Log($"DungeonGenerator found {allFloorTiles.Count}");
         }
 
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
-        ChangeState(EnemyState.Idle);
         pathfinding = GetComponent<AStarPathfinding>();
+
+        ChangeState(EnemyState.Idle);
     }
 
+    // Continuously update the enemy state and handle actions based on the current state.
     private void Update()
     {
-        //CheckForPlayer();
-
         if (attackCooldownTimer > 0)
         {
             attackCooldownTimer -= Time.deltaTime;
         }
+
+        // Only update AI if room is active
+        if (!isRoomActive)
+        {
+            HandleRoomInactiveState();
+            return;
+        }
+
+        // Check for player only if room is active
+        CheckForPlayer();
 
         switch (currentState)
         {
@@ -95,158 +108,124 @@ public class EnemyFSM : MonoBehaviour
             case EnemyState.Dead:
                 HandleDeadState();
                 break;
+            case EnemyState.RoomInactive:
+                HandleRoomInactiveState();
+                break;
         }
     }
 
+    // Stop movement and animations when the room is inactive.
+    private void HandleRoomInactiveState()
+    {
+        // Stop all movement and animations
+        rb.velocity = Vector2.zero;
+
+        // Set idle animation
+        if (anim != null)
+        {
+            anim.SetBool("isIdle", true);
+            anim.SetBool("isMoving", false);
+            anim.SetBool("isAttacking", false);
+        }
+    }
+
+    // Handle transition from Idle to Patrolling based on random chance.
     private void HandleIdleState()
     {
-        // Start the idle timer if it's the first time entering Idle state
-        if (idleTimer <= 0)
-        {
-            idleTimer = idleDuration; // Set the idle duration
-        }
+        float randomChance = UnityEngine.Random.Range(0f, 1f);
+        float frameChance = patrolChancePerSecond * Time.deltaTime;
 
-        // Countdown the idle timer
-        idleTimer -= Time.deltaTime;
-
-        // When the timer reaches zero, change to the Patrolling state
-        if (idleTimer <= 0)
+        if (randomChance < frameChance)
         {
             ChangeState(EnemyState.Patrolling);
         }
     }
 
+    // Transition to Patrolling state, choose random patrol point, and start pathfinding.
     public void EnterPatrollingState()
     {
-        if (isPatrolling) return;
-        
+        if (isPatrolling || !isRoomActive) return;
+  
+        // Start patrolling immediately if the room is active and enemy isn't already patrolling        
+
         isPatrolling = true;
 
-        // Select a random patrol point
+        // Choose a random patrol point on the floor tiles
         Vector2Int randomPatrolPoint = GetRandomPatrolPoint();
-
-        // Perform A* pathfinding to find a path to that point
         Vector2Int startPosition = new Vector2Int((int)transform.position.x, (int)transform.position.y);
+
+        // Get the path using the pathfinding algorithm
         List<Vector2Int> path = pathfinding.FindPath(startPosition, randomPatrolPoint);
 
-        patrolPath = path;
+        // Ensure we got a valid path
+        if (path == null || path.Count == 0)
+        {
+            Debug.LogWarning("No valid patrol path found!");
+            ChangeState(EnemyState.Idle);
+            return;
+        }
+
+        patrolPath = path;        
+
         currentPatrolPointIndex = 0;
 
-        // Start patrolling along the path
+        // Start patrol coroutine
         StartCoroutine(PatrolAlongPath(patrolPath));
     }
 
+    // Move the enemy along the patrol path, update direction when necessary, and stop at each patrol point.
     private IEnumerator PatrolAlongPath(List<Vector2Int> path)
     {
-        while (currentPatrolPointIndex < path.Count)
+        while (currentPatrolPointIndex < path.Count && isRoomActive)
         {
             Vector3 targetPosition = new Vector3(path[currentPatrolPointIndex].x + 0.5f, path[currentPatrolPointIndex].y + 0.25f, transform.position.z);
-            //targetPosition = AvoidOtherEnemies(targetPosition);
+            Vector3 startPosition = transform.position;
 
-            // Move towards the target position
-            while (Vector2.Distance(transform.position, targetPosition) > 0.1f)
+            Vector2 directionToTarget = (targetPosition - startPosition).normalized;
+            if (Mathf.Abs(directionToTarget.x) > 0.3f)
             {
-                Vector2 direction = (targetPosition - transform.position).normalized;
-                rb.velocity = direction * patrolSpeed;
-
-                yield return null;
-            }
-
-            // Stop at the patrol point and wait
-            rb.velocity = Vector2.zero;
-            currentPatrolPointIndex++;
-
-            // Optionally, add a waiting time at each patrol point before moving to the next
-            if (currentPatrolPointIndex < path.Count)
-            {
-                yield return new WaitForSeconds(patrolWaitTime);
-            }
-        }
-
-        // Once the patrol path is complete, return to idle
-        isPatrolling = false;
-        ChangeState(EnemyState.Idle);
-    }
-
-    Vector3 AvoidOtherEnemies(Vector2 targetPosition)
-    {
-        Collider2D[] nearbyEnemies = Physics2D.OverlapCircleAll(transform.position, 1f, LayerMask.GetMask("Enemy"));
-
-        if (nearbyEnemies.Length > 0)
-        {
-            Debug.Log(nearbyEnemies.Length);
-
-            foreach (var enemy in nearbyEnemies)
-            {
-                if (enemy.gameObject != this.gameObject) // Avoid the enemy self
+                int desiredDirection = directionToTarget.x > 0 ? -1 : 1;
+                if (facingDirection != desiredDirection)
                 {
-                    Debug.Log($"enemies closing");
-                    Vector2 directionAwayFromEnemy = (transform.position - enemy.transform.position).normalized;
-                    targetPosition += directionAwayFromEnemy * forceAwayFromEnemies;
+                    Flip();
                 }
             }
 
-            Vector2Int targetGridPos = new Vector2Int(Mathf.FloorToInt(targetPosition.x), Mathf.FloorToInt(targetPosition.y));
-
-            if (!IsValidFloorTile(targetGridPos))
+            // Move towards the target point
+            while (Vector2.Distance(transform.position, targetPosition) > 0.1f && isRoomActive)
             {
-                targetPosition = FindNearestValidPosition(targetPosition);
-                RecalculatePathToNewTarget(targetPosition);
+                Vector2 direction = (targetPosition - transform.position).normalized;
+                rb.velocity = direction * patrolSpeed;
+                yield return null;
             }
+
+            // Stop movement when close to target point
+            rb.velocity = Vector2.zero;            
+            currentPatrolPointIndex++;           
         }
 
-        return targetPosition;
-    }
-
-    bool IsValidFloorTile(Vector2Int gridPos)
-    {
-        return allFloorTiles.Contains(gridPos);
-    }
-
-    void RecalculatePathToNewTarget(Vector2 targetPosition)
-    {
-        Vector2Int targetGridPos = new Vector2Int(Mathf.FloorToInt(targetPosition.x), Mathf.FloorToInt(targetPosition.y));
-
-        if (IsValidFloorTile(targetGridPos))
+        // End patrolling and switch to idle state
+        isPatrolling = false;
+        
+        if (isRoomActive)
         {
-            Vector2Int startPosition = new Vector2Int(Mathf.FloorToInt(transform.position.x), Mathf.FloorToInt(transform.position.y));
-            List<Vector2Int> newPath = pathfinding.FindPath(startPosition, targetGridPos);
-
-            Debug.Log("New Path Length: " + newPath.Count);
-
-            patrolPath = newPath; // Update the patrol path to the new path
-            currentPatrolPointIndex = 0; // Restart patrolling from the new path
+            ChangeState(EnemyState.Idle);            
         }
     }
 
-    Vector2 FindNearestValidPosition(Vector2 invalidPos)
-    {
-        Vector2 nearestValidPosition = invalidPos;
-        float closestDistance = float.MaxValue;
-
-        foreach (Vector2Int validPos in allFloorTiles)
-        {
-            float distance = Vector2.Distance(invalidPos, validPos);
-            if (distance < closestDistance)
-            {
-                closestDistance = distance;
-                nearestValidPosition = validPos;
-            }
-        }
-
-        Debug.Log("Nearest Valid Position Found");
-        return nearestValidPosition;
-    }
-
-    // Select a random patrol point from allFloorTiles
+    // Return a random patrol point from the available floor tiles.
     private Vector2Int GetRandomPatrolPoint()
     {
         List<Vector2Int> floorTilesList = new List<Vector2Int>(allFloorTiles);
+        // Ensure we get a random point from the floor tiles
         return floorTilesList[UnityEngine.Random.Range(0, floorTilesList.Count)];
     }
 
+    // Move the enemy towards the player when in Chasing state, and flip direction if necessary.
     private void HandleChasingState()
     {
+        if (!isRoomActive) return;
+
         if (player.position.x > transform.position.x && facingDirection == 1 ||
             player.position.x < transform.position.x && facingDirection == -1)
         {
@@ -257,24 +236,31 @@ public class EnemyFSM : MonoBehaviour
         rb.velocity = direction * chaseSpeed;
     }
 
+    // Flip the enemy’s facing direction.
     void Flip()
     {
         facingDirection *= -1;
         transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y, transform.localScale.z);
     }
 
+    // Stop movement and set the attack animation when in Attacking state.
     private void HandleAttackingState()
     {
+        if (!isRoomActive) return;
         rb.velocity = Vector2.zero;
     }
 
+    // Handle the enemy’s behavior when in Dead state
     private void HandleDeadState()
     {
 
     }
 
+    // Detect the player and change state to Attacking if in range, or Chasing if out of range.
     private void CheckForPlayer()
     {
+        if (!isRoomActive) return;
+
         Collider2D[] hits = Physics2D.OverlapCircleAll(detectionPoint.position, playerDetectRange, playerLayer);
 
         if (hits.Length > 0)
@@ -283,7 +269,6 @@ public class EnemyFSM : MonoBehaviour
 
             if (Vector2.Distance(transform.position, player.transform.position) <= attackRange && attackCooldownTimer <= 0)
             {
-                // if the player is in attack range and cooldown is ready
                 attackCooldownTimer = attackCooldown;
                 ChangeState(EnemyState.Attacking);
             }
@@ -294,15 +279,24 @@ public class EnemyFSM : MonoBehaviour
         }
         else
         {
-            rb.velocity = Vector2.zero;
-            ChangeState(EnemyState.Idle);
+            if (currentState == EnemyState.Chasing || currentState == EnemyState.Attacking)
+            {
+                rb.velocity = Vector2.zero;
+                ChangeState(EnemyState.Idle);
+            }
         }
     }
 
+    // Change the enemy’s state, stop previous actions, and start corresponding animations.
     void ChangeState(EnemyState newState)
     {
+        // Don't change state if room is inactive unless it's to RoomInactive state
+        if (!isRoomActive && newState != EnemyState.RoomInactive) return;
+
+        // Clear previous state animations
         if (currentState == EnemyState.Idle)
         {
+            //Debug.Log("ChangeState: Exit Idle");
             anim.SetBool("isIdle", false);
         }
         else if (currentState == EnemyState.Chasing)
@@ -315,14 +309,18 @@ public class EnemyFSM : MonoBehaviour
         }
         else if (currentState == EnemyState.Patrolling)
         {
-            patrolPath.Clear();
+            anim.SetBool("isMoving", false);
+            if (patrolPath != null) patrolPath.Clear();
             currentPatrolPointIndex = 0;
+            StopAllCoroutines();
+            isPatrolling = false;
         }
 
         currentState = newState;
 
+        // Set new state animations
         if (currentState == EnemyState.Idle)
-        {
+        {            
             anim.SetBool("isIdle", true);
         }
         else if (currentState == EnemyState.Chasing)
@@ -333,13 +331,61 @@ public class EnemyFSM : MonoBehaviour
         {
             anim.SetBool("isAttacking", true);
         }
-
-        if (currentState == EnemyState.Patrolling)
+        else if (currentState == EnemyState.Patrolling)
         {
+            anim.SetBool("isMoving", true);
             EnterPatrollingState();
         }
     }
 
+
+    // ================ ROOM MANAGEMENT PUBLIC METHOD ================ //
+
+    // Set the index of the room the enemy is currently in.
+    public void SetRoomIndex(int roomIndex)
+    {
+        myRoomIndex = roomIndex;
+    }
+
+    // Return the current room index.
+    public int GetRoomIndex()
+    {
+        return myRoomIndex;
+    }
+
+    // Set the room’s active status and transition the enemy state if necessary.
+    public void SetRoomActive(bool active)
+    {
+        if (isRoomActive == active) return;
+
+        if (active)
+        {
+            // Room becomes active, resume previous state or idle state if no previous state was saved
+            isRoomActive = true;
+
+            if (currentState == EnemyState.RoomInactive)
+            {
+                ChangeState(stateBeforeInactive != EnemyState.RoomInactive ? stateBeforeInactive : EnemyState.Idle);
+            }
+        }
+        else
+        {
+            // Room becomes inactive, stop patrol and move to inactive state
+            isRoomActive = false;
+            StopAllCoroutines();
+            isPatrolling = false;
+            rb.velocity = Vector2.zero;
+            ChangeState(EnemyState.RoomInactive);
+        }
+    }
+
+    // Return whether the room is active.
+    public bool IsRoomActive()
+    {
+        return isRoomActive;
+    }
+
+    // Draw gizmos for visualizing the detection range and patrol path in the editor.
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
@@ -355,5 +401,9 @@ public class EnemyFSM : MonoBehaviour
                 Gizmos.DrawLine(start, end);
             }
         }
+
+        // Draw room activity status
+        Gizmos.color = isRoomActive ? Color.green : Color.gray;
+        Gizmos.DrawWireCube(transform.position, Vector3.one * 0.5f);
     }
 }

@@ -4886,12 +4886,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 338fe163f2dc5cf469a02f45d7cc8b4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  idleDuration: 1
+  patrolChancePerSecond: 0.5
   patrolSpeed: 1
   patrolWaitTime: 0
   forceAwayFromEnemies: 0.5
   chaseSpeed: 1
-  playerDetectRange: 5
+  playerDetectRange: 2
   detectionPoint: {fileID: 7470287272718566291}
   playerLayer:
     serializedVersion: 2
@@ -4910,7 +4910,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 340252784705534419f9fdb3eedb21ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 1
+  damage: 0
   attackPoint: {fileID: 4833012576751349297}
   weaponRange: 0.5
   stunTime: 0.5
