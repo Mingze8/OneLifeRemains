@@ -24,6 +24,7 @@ public class DungeonGenerator : MonoBehaviour
     public int mapWidth = 80;
     public int mapHeight = 80;
     public int minRoomSize = 20;
+    public int roomCount = 8;
     public int offset = 2;
 
     [Range(0.3f, 1f)]
@@ -61,7 +62,7 @@ public class DungeonGenerator : MonoBehaviour
         allCorridorTiles = new HashSet<Vector2Int>();
         
         RectInt dungeonArea = new RectInt(0, 0, mapWidth, mapHeight);
-        rooms = BSPGenerator.GenerateRooms(dungeonArea, minRoomSize, 8);       
+        rooms = BSPGenerator.GenerateRooms(dungeonArea, minRoomSize, roomCount);       
 
         Debug.Log($"=== DUNGEON GENERATION STARTED ===");
         Debug.Log($"Target: {rooms.Count} rooms on {mapWidth}x{mapHeight} map");
@@ -789,7 +790,7 @@ public class DungeonGenerator : MonoBehaviour
         // Get the first room
         Room startingRoom = rooms[0];        
 
-        Vector3 spawnPosition = new Vector3(startingRoom.GetCenter().x, startingRoom.GetCenter().y, 0);        
+        Vector3 spawnPosition = new Vector3(startingRoom.GetCenter().x + 0.5f, startingRoom.GetCenter().y + 0.25f, 0);        
 
         if (playerInstance != null)
         {
@@ -827,6 +828,12 @@ public class DungeonGenerator : MonoBehaviour
 
 
     // -----------------------------------------------   DUNGEON QUALITY METRICS & DEBUGGING PART - START  ----------------------------------------------- //
+
+    // Return the set of all floor tiles
+    public HashSet<Vector2Int> GetAllFloorTiles()
+    {
+        return allFloorTiles;
+    }
 
     // Logs various statistics about the dungeon
     void LogOverallDungeonMetrics()

@@ -164,7 +164,7 @@ public class DistributionManager : MonoBehaviour
         if (selectedEnemy != null && selectedEnemy.enemyPrefab != null)
         {
             // Convert Vector2Int to Vector3 for world position
-            Vector3 worldPosition = new Vector3(spawnPosition.x, spawnPosition.y, 0);
+            Vector3 worldPosition = new Vector3(spawnPosition.x + 0.5f, spawnPosition.y + 0.25f, 0);
 
             //Instantiate the selected enemy
             GameObject spawnedEnemy = Instantiate(selectedEnemy.enemyPrefab, worldPosition, Quaternion.identity);
