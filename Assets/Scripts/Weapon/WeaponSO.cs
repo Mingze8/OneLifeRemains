@@ -1,5 +1,4 @@
-using UnityEngine;
-using static UnityEngine.RuleTile.TilingRuleOutput;
+﻿using UnityEngine;
 
 public enum WeaponType
 {
@@ -32,5 +31,5 @@ public abstract class WeaponSO : ScriptableObject
     public float critChance;
     public float critDamage;
 
-    public abstract void UseWeapon(GameObject player, Animator animator);
+    public abstract void UseWeapon(GameObject player, Animator animator, Transform attackPoint, Vector2 direction);    
 }

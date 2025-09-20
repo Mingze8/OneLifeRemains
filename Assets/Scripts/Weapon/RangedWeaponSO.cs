@@ -7,7 +7,7 @@ public class RangedWeaponSO : WeaponSO
     public int ammoCapacity;
     public float reloadSpeed;
 
-    public override void UseWeapon(GameObject player, Animator animator)
+    public override void UseWeapon(GameObject player, Animator animator, Transform attackPoint, Vector2 direction)
     {
         animator.SetTrigger("AttackRanged");
         Debug.Log("Ranged Weapon: " + weaponName);

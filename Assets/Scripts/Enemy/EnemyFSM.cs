@@ -10,7 +10,7 @@ public enum EnemyState
     Chasing,
     Attacking,
     Dead,
-    RoomInactive
+    Inactive
 }
 
 public class EnemyFSM : MonoBehaviour
@@ -90,7 +90,7 @@ public class EnemyFSM : MonoBehaviour
         // Only update AI if room is active
         if (!isRoomActive)
         {
-            HandleRoomInactiveState();
+            HandleInactiveState();
             return;
         }
 
@@ -111,8 +111,8 @@ public class EnemyFSM : MonoBehaviour
             case EnemyState.Dead:
                 HandleDeadState();
                 break;
-            case EnemyState.RoomInactive:
-                HandleRoomInactiveState();
+            case EnemyState.Inactive:
+                HandleInactiveState();
                 break;
         }
     }
@@ -129,8 +129,10 @@ public class EnemyFSM : MonoBehaviour
 
 
     // Stop movement and animations when the room is inactive.
-    private void HandleRoomInactiveState()
+    private void HandleInactiveState()
     {
+        Debug.Log("No Moving!");
+
         // Stop all movement and animations
         rb.velocity = Vector2.zero;
 
@@ -395,7 +397,7 @@ public class EnemyFSM : MonoBehaviour
                 attackCooldownTimer = attackCooldown;
                 ChangeState(EnemyState.Attacking);
             }
-            else if (Vector2.Distance(transform.position, player.position) > attackRange && currentState != EnemyState.Attacking && currentState != EnemyState.Chasing)
+            else if (Vector2.Distance(transform.position, player.position) > attackRange && currentState != EnemyState.Attacking && currentState != EnemyState.Chasing && currentState != EnemyState.Inactive)
             {
                 ChangeState(EnemyState.Chasing);
             }
@@ -411,10 +413,10 @@ public class EnemyFSM : MonoBehaviour
     }
 
     // Change the enemy’s state, stop previous actions, and start corresponding animations.
-    void ChangeState(EnemyState newState)
+    public void ChangeState(EnemyState newState)
     {
         // Don't change state if room is inactive unless it's to RoomInactive state
-        if (!isRoomActive && newState != EnemyState.RoomInactive) return;
+        if (!isRoomActive && newState != EnemyState.Inactive) return;
 
         // Clear previous state animations
         if (currentState == EnemyState.Idle)
@@ -491,9 +493,9 @@ public class EnemyFSM : MonoBehaviour
             // Room becomes active, resume previous state or idle state if no previous state was saved
             isRoomActive = true;
 
-            if (currentState == EnemyState.RoomInactive)
+            if (currentState == EnemyState.Inactive)
             {
-                ChangeState(stateBeforeInactive != EnemyState.RoomInactive ? stateBeforeInactive : EnemyState.Idle);
+                ChangeState(stateBeforeInactive != EnemyState.Inactive ? stateBeforeInactive : EnemyState.Idle);
             }
         }
         else
@@ -503,7 +505,7 @@ public class EnemyFSM : MonoBehaviour
             StopAllCoroutines();
             isPatrolling = false;
             rb.velocity = Vector2.zero;
-            ChangeState(EnemyState.RoomInactive);
+            ChangeState(EnemyState.Inactive);
         }
     }
 

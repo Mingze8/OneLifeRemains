@@ -4891,7 +4891,7 @@ MonoBehaviour:
   patrolSpeed: 1
   chaseSpeed: 3
   pathUpdateInterval: 0.5
-  chasePathThreshold: 0.4
+  chasePathThreshold: 0.3
   playerDetectRange: 5
   detectionPoint: {fileID: 7470287272718566291}
   playerLayer:
@@ -4944,3 +4944,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentHealth: 3
   maxHealth: 3
+  damagedStunTime: 1

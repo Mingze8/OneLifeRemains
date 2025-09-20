@@ -98,6 +98,7 @@ public class PlayerController : MonoBehaviour
         IEnumerator stunCounter(float stunTime)
         {
             anim.SetBool("isStunned", true);
+            rb.velocity = Vector2.zero;
             yield return new WaitForSeconds(stunTime);
             anim.SetBool("isStunned", false);
             isStunned = false;            

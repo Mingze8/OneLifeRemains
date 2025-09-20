@@ -4,7 +4,7 @@ public class WeaponController : MonoBehaviour
 {
     private PlayerController playerController;
     private WeaponInventory weaponInventory;
-    public WeaponSO currentWeapon;    
+    public WeaponSO currentWeapon;
 
     private GameObject currentWeaponInstance;
     private Transform handSocket;
@@ -13,16 +13,37 @@ public class WeaponController : MonoBehaviour
     public float attackCooldown = 0.5f;
     private float timer;
 
+    // Reference to the AttackPoint (for detecting collision)
+    public Transform attackPoint;
+
+    // Store the attack position for Gizmos visualization
+    private Vector2 attackPosition;
+    private Vector2 mouseDirection;
+    
+    public float horizontalOffset = 0f; // Horizontal offset
+    public float verticalOffset = 0.35f; // Vertical offset
+    public float attackPointDistance = 3f; // Default distance
+    public float minAttackDistance = 1.2f; // Minimum attack distance from player'    
+
     void Start()
     {
         handSocket = GameObject.Find("P_Weapon_Right").transform;
         playerController = GetComponent<PlayerController>();
         weaponInventory = GetComponent<WeaponInventory>();
         playerAnimator = GetComponent<Animator>();
-        EquipWeapon();        
+        EquipWeapon();
+
+        // Ensure AttackPoint is assigned (find by name or assign in the inspector)
+        if (attackPoint == null)
+        {
+            attackPoint = transform.Find("AttackPoint");
+            if (attackPoint == null)
+            {
+                Debug.LogError("AttackPoint not found under Player!");
+            }
+        }
     }
 
-    // Start is called before the first frame update
     void Update()
     {
         HandleWeaponDirection();
@@ -48,10 +69,17 @@ public class WeaponController : MonoBehaviour
         {
             if (currentWeapon != null && timer <= 0)
             {
-                currentWeapon.UseWeapon(gameObject, playerAnimator);                
+                // Pass the direction to UseWeapon
+                currentWeapon.UseWeapon(gameObject, playerAnimator, attackPoint, mouseDirection);
                 timer = attackCooldown;
             }
         }
+
+        //// Update attack position every frame to always show the Gizmos
+        //if (currentWeapon != null)
+        //{
+        //    attackPosition = currentWeapon.GetAttackPosition(gameObject, attackPoint, playerAnimator, mouseDirection);
+        //}
     }
 
     private void EquipWeapon()
@@ -65,7 +93,7 @@ public class WeaponController : MonoBehaviour
                 Destroy(currentWeaponInstance);
             }
 
-            currentWeaponInstance = Instantiate(currentWeapon.weaponPrefab, handSocket);            
+            currentWeaponInstance = Instantiate(currentWeapon.weaponPrefab, handSocket);
         }
         else
         {
@@ -74,13 +102,38 @@ public class WeaponController : MonoBehaviour
     }
 
     private void HandleWeaponDirection()
-    {
+    {        
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mousePos.z = 0;
+        
+        mouseDirection = (mousePos - transform.position).normalized;
 
-        // Calculate direction from player to mouse
-        Vector2 direction = (mousePos - transform.position).normalized;
+        currentWeaponInstance.transform.up = mouseDirection;
 
-        // Rotate weapon to face the mouse direction
-        currentWeaponInstance.transform.up = direction;
+        float weaponReach = 1.5f;
+
+        if (currentWeapon is MeleeWeaponSO meleeWeapon)
+        {
+            weaponReach = meleeWeapon.attackRange;
+        }                
+
+        attackPoint.position = transform.position + (Vector3)mouseDirection * weaponReach;
+        attackPoint.position += new Vector3(0, verticalOffset, 0);
+
+        attackPosition = attackPoint.position;
+    }
+
+    // Visualize the attack position in Scene view
+    private void OnDrawGizmos()
+    {
+        if (currentWeapon is MeleeWeaponSO meleeWeapon)
+        {
+            // Ensure attackPoint is assigned before drawing Gizmos
+            if (attackPoint != null)
+            {
+                Gizmos.color = Color.green;
+                Gizmos.DrawWireSphere(attackPosition, meleeWeapon.attackRange); // Visualize the attack position
+            }
+        }
     }
 }
