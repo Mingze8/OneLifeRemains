@@ -2886,6 +2886,7 @@ GameObject:
   - component: {fileID: -3380869760118346880}
   - component: {fileID: 686110867787622453}
   - component: {fileID: 1850885673944535803}
+  - component: {fileID: 2864054885857560212}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -3068,6 +3069,20 @@ MonoBehaviour:
   verticalOffset: 0.35
   attackPointDistance: 0.85
   minAttackDistance: 0.85
+--- !u!114 &2864054885857560212
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5674993177752774652}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab93f8909f47e4843a0ba0fdc9f113e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaxMana: 100
+  ManaRegenRate: 1
 --- !u!1 &5783462445355917236
 GameObject:
   m_ObjectHideFlags: 0

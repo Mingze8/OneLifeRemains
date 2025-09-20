@@ -50,10 +50,14 @@ public class Projectile : MonoBehaviour
     private void OnCollisionEnter2D(Collision2D collision)
     {
         // Destroy the projectile when it collides with a wall, enemy, or any other object
-        if (collision.gameObject.CompareTag("Wall") || collision.gameObject.CompareTag("Enemy"))
+        if (collision.gameObject.CompareTag("Wall"))
+        {
+            Destroy(gameObject);            
+        }
+        else if (collision.gameObject.CompareTag("Enemy"))
         {
             Destroy(gameObject);
-            Debug.Log("Projectile hit something and is destroyed.");
+            collision.gameObject.GetComponent<EnemyHealth>().TakeDamage(damage);
         }
     }
 }

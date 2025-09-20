@@ -13,6 +13,8 @@ public class WeaponController : MonoBehaviour
     public float attackCooldown = 0.5f;
     private float timer;
 
+    private float magicCooldownTimer = 0f;
+
     // Reference to the AttackPoint (for detecting collision)
     public Transform attackPoint;
 
@@ -47,6 +49,11 @@ public class WeaponController : MonoBehaviour
     void Update()
     {
         HandleWeaponDirection();
+        
+        if (magicCooldownTimer > 0)
+        {
+            magicCooldownTimer -= Time.deltaTime;  // Decrease cooldown for magic weapon
+        }
 
         if (timer > 0)
         {
@@ -67,9 +74,16 @@ public class WeaponController : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0))
         {
-            if (currentWeapon != null && timer <= 0)
+            if (currentWeapon is MagicWeaponSO magicWeapon && magicCooldownTimer <= 0)
             {
-                // Pass the direction to UseWeapon
+                // Use the magic weapon and start the cooldown timer
+                magicWeapon.UseWeapon(gameObject, playerAnimator, attackPoint, mouseDirection);
+                magicCooldownTimer = magicWeapon.spellCooldown;  // Set the cooldown for magic weapon
+                timer = attackCooldown;  // General attack cooldown
+            }
+            else if (!(currentWeapon is MagicWeaponSO))
+            {
+                // Handle other weapon types (melee, ranged)
                 currentWeapon.UseWeapon(gameObject, playerAnimator, attackPoint, mouseDirection);
                 timer = attackCooldown;
             }
@@ -100,7 +114,7 @@ public class WeaponController : MonoBehaviour
             {
                 rangedWeapon.SetAmmo(rangedWeapon.ammoCapacity);
                 rangedWeapon.StopReloading();
-            }
+            }            
         }
         else
         {
@@ -117,7 +131,7 @@ public class WeaponController : MonoBehaviour
 
         currentWeaponInstance.transform.up = mouseDirection;
 
-        float weaponReach = 1.5f;
+        float weaponReach = 0f;
 
         if (currentWeapon is MeleeWeaponSO meleeWeapon)
         {

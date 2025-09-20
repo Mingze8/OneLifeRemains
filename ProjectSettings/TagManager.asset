@@ -8,6 +8,8 @@ TagManager:
   - LootChest
   - Ranged
   - Melee
+  - Wall
+  - Magic
   layers:
   - Default
   - TransparentFX
