@@ -2969,7 +2969,6 @@ MonoBehaviour:
   facingDirection: -1
   rb: {fileID: 6821217174301685498}
   anim: {fileID: 81485915404393312}
-  startingWeapon: {fileID: 0}
 --- !u!95 &81485915404393312
 Animator:
   serializedVersion: 5

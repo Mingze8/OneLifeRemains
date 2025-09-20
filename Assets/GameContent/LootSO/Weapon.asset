@@ -15,5 +15,5 @@ MonoBehaviour:
   lootName: Weapon
   weight: 5
   possibleWeapon:
-  - {fileID: 11400000, guid: 4654db97bd4903b4cbbc07e93ca424ef, type: 2}
   - {fileID: 11400000, guid: 2794145c9c6340a4a8a968aa7b406867, type: 2}
+  - {fileID: 11400000, guid: 4654db97bd4903b4cbbc07e93ca424ef, type: 2}
