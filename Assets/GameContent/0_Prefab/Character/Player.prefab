@@ -2853,6 +2853,8 @@ GameObject:
   - component: {fileID: 3277503834052071669}
   - component: {fileID: 81485915404393312}
   - component: {fileID: -3380869760118346880}
+  - component: {fileID: 1850885673944535803}
+  - component: {fileID: 686110867787622453}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -2967,8 +2969,7 @@ MonoBehaviour:
   facingDirection: -1
   rb: {fileID: 6821217174301685498}
   anim: {fileID: 81485915404393312}
-  meleeWeapon: {fileID: 1941636751970302256, guid: b329a18fc23e3814e9c0fcf5dea0475a, type: 3}
-  bowWeapon: {fileID: 1941636751970302256, guid: 636ef5bda3c5b5849953d6f8e36b21ac, type: 3}
+  startingWeapon: {fileID: 0}
 --- !u!95 &81485915404393312
 Animator:
   serializedVersion: 5
@@ -3004,6 +3005,34 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentHealth: 3
   maxHealth: 3
+--- !u!114 &1850885673944535803
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5674993177752774652}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 707fa5c7ae724d1459c93d75bd6bfd27, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentWeapon: {fileID: 0}
+--- !u!114 &686110867787622453
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5674993177752774652}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1aafabe17ee45c4b8ea3934097fc05b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  weaponList:
+  - {fileID: 11400000, guid: 2794145c9c6340a4a8a968aa7b406867, type: 2}
+  - {fileID: 11400000, guid: 4654db97bd4903b4cbbc07e93ca424ef, type: 2}
 --- !u!1 &5783462445355917236
 GameObject:
   m_ObjectHideFlags: 0

@@ -9,9 +9,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4859b5bf683d950429e2c53ac6aef6a2, type: 3}
+  m_Script: {fileID: 0}
   m_Name: Bow
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::RangedWeaponSO
   weaponName: Bow
-  weight: 5
+  weaponType: 1
+  weaponIcon: {fileID: 21300000, guid: 590c41e90f2229b4babbd7d665f27656, type: 3}
   weaponPrefab: {fileID: 1941636751970302256, guid: 636ef5bda3c5b5849953d6f8e36b21ac, type: 3}
+  weaponRarity: 0
+  weight: 5
+  baseAttackPower: 1
+  attackSpeed: 1
+  critChance: 0
+  critDamage: 0
+  attackRange: 3
+  ammoCapacity: 10
+  reloadSpeed: 3

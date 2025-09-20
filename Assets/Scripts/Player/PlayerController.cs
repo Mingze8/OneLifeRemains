@@ -11,19 +11,9 @@ public class PlayerController : MonoBehaviour
     public Animator anim;
     private bool isStunned;
 
-    [Header("Weapon")]
-    public GameObject meleeWeapon;
-    public GameObject bowWeapon;
-
-    private GameObject currentWeapon;
-    private Transform weaponParent;
-
     private void Start()
     {
-        weaponParent = GameObject.Find("P_Weapon_Right").transform;
-
-        currentWeapon = Instantiate(meleeWeapon, weaponParent);        
-        currentWeapon.SetActive(true);        
+        
     }
 
     void Update()
@@ -31,7 +21,7 @@ public class PlayerController : MonoBehaviour
         if (!isStunned)
         {
             HandleMovement();
-            HandleWeaponDirection();
+            handleFlipCharacter();
             handleCombat();
         }        
     }
@@ -47,22 +37,10 @@ public class PlayerController : MonoBehaviour
         rb.velocity = movement * speed;
     }
 
-    void HandleWeaponDirection()
+    void handleFlipCharacter()
     {
-        // Get mouse position in world space
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
-        // Calculate direction from player to mouse
-        Vector2 direction = (mousePos - transform.position).normalized;
-
-        // Rotate weapon to face the mouse direction
-        currentWeapon.transform.up = direction;
-
-        flipCharacter(mousePos);        
-    }
-
-    void flipCharacter(Vector3 mousePos)
-    {
         // Check if the mouse is to the left or right of the player
         if (mousePos.x < transform.position.x && facingDirection == 1)  // Mouse is left
         {
@@ -82,41 +60,30 @@ public class PlayerController : MonoBehaviour
 
     void handleCombat()
     {
-        // Weapon Switching
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            SwitchWeapon(meleeWeapon);
-            Debug.Log("Switch: 1");
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            SwitchWeapon(bowWeapon);
-            Debug.Log("Switch: 2");
-        }
 
-        // Combat Input
-        if (Input.GetKeyDown(KeyCode.Mouse0))
-        {
-            if (currentWeapon.CompareTag("Melee"))
-            {
-                anim.SetTrigger("AttackMelee");
-                speed = 3;
-            }
-            else if (currentWeapon.CompareTag("Ranged"))
-            {
-                anim.SetTrigger("AttackRanged");
-                speed = 3;
-            }
-        }
+        //// Combat Input
+        //if (Input.GetKeyDown(KeyCode.Mouse0))
+        //{
+        //    if (currentWeapon.CompareTag("Melee"))
+        //    {
+        //        anim.SetTrigger("AttackMelee");
+        //        speed = 3;
+        //    }
+        //    else if (currentWeapon.CompareTag("Ranged"))
+        //    {
+        //        anim.SetTrigger("AttackRanged");
+        //        speed = 3;
+        //    }
+        //}
     }
 
-    void SwitchWeapon(GameObject newWeapon)
-    {
-        // Set the new sprite to the weapon renderer
-        Destroy(currentWeapon);
-        currentWeapon = Instantiate(newWeapon, weaponParent);
-        currentWeapon.SetActive(true);
-    }
+    //void SwitchWeapon(GameObject newWeapon)
+    //{
+    //    // Set the new sprite to the weapon renderer
+    //    Destroy(currentWeapon);
+    //    currentWeapon = Instantiate(newWeapon, weaponParent);
+    //    currentWeapon.SetActive(true);
+    //}
 
     public void ResetSpeed()
     {
