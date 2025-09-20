@@ -19,7 +19,7 @@ public class MeleeWeaponSO : WeaponSO
         {
             if (enemy.CompareTag("Enemy"))
             {
-                enemy.GetComponent<EnemyHealth>().TakeDamage(baseAttackPower);
+                enemy.GetComponent<EnemyHealth>().TakeDamage(baseAttackPower); 
             }
         }
     }
