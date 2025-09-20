@@ -22,6 +22,7 @@ MonoBehaviour:
   attackSpeed: 1
   critChance: 0
   critDamage: 0
+  projectilePrefab: {fileID: 7277329722206000419, guid: 9d1d13c8d885b4d4094f5a60d0fae075, type: 3}
   attackRange: 3
   ammoCapacity: 10
   reloadSpeed: 3

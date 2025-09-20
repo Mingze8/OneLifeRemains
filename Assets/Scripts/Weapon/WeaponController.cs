@@ -94,6 +94,13 @@ public class WeaponController : MonoBehaviour
             }
 
             currentWeaponInstance = Instantiate(currentWeapon.weaponPrefab, handSocket);
+
+            // Initialize ammo for ranged weapons
+            if (currentWeapon is RangedWeaponSO rangedWeapon)
+            {
+                rangedWeapon.SetAmmo(rangedWeapon.ammoCapacity);
+                rangedWeapon.StopReloading();
+            }
         }
         else
         {
