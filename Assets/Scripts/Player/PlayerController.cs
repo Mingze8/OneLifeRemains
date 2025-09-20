@@ -85,9 +85,9 @@ public class PlayerController : MonoBehaviour
     //    currentWeapon.SetActive(true);
     //}
 
-    public void ResetSpeed()
+    public void setSpeed(float newSpeed)
     {
-        speed = initialSpeed;
+        speed = newSpeed;
     }
 
     public void Stunned(float stunTime)

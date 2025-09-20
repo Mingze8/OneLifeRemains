@@ -2,6 +2,7 @@
 
 public class WeaponController : MonoBehaviour
 {
+    private PlayerController playerController;
     private WeaponInventory weaponInventory;
     public WeaponSO currentWeapon;    
 
@@ -9,10 +10,13 @@ public class WeaponController : MonoBehaviour
     private Transform handSocket;
     private Animator playerAnimator;
 
+    public float attackCooldown = 0.5f;
+    private float timer;
 
     void Start()
     {
         handSocket = GameObject.Find("P_Weapon_Right").transform;
+        playerController = GetComponent<PlayerController>();
         weaponInventory = GetComponent<WeaponInventory>();
         playerAnimator = GetComponent<Animator>();
         EquipWeapon();        
@@ -22,6 +26,11 @@ public class WeaponController : MonoBehaviour
     void Update()
     {
         HandleWeaponDirection();
+
+        if (timer > 0)
+        {
+            timer -= Time.deltaTime;
+        }
 
         if (Input.GetKeyDown(KeyCode.Q))
         {
@@ -37,9 +46,10 @@ public class WeaponController : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0))
         {
-            if (currentWeapon != null)
+            if (currentWeapon != null && timer <= 0)
             {
-                currentWeapon.UseWeapon(gameObject, playerAnimator);
+                currentWeapon.UseWeapon(gameObject, playerAnimator);                
+                timer = attackCooldown;
             }
         }
     }
@@ -56,6 +66,10 @@ public class WeaponController : MonoBehaviour
             }
 
             currentWeaponInstance = Instantiate(currentWeapon.weaponPrefab, handSocket);            
+        }
+        else
+        {
+            Debug.Log("No Weapon Found");
         }
     }
 

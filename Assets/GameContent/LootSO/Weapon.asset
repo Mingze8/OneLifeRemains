@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: f314d9aeb2f8d4544bd33d4cae005f0c, type: 3}
   m_Name: Weapon
-  m_EditorClassIdentifier: Assembly-CSharp::WeaponLootSO
+  m_EditorClassIdentifier: 
   lootName: Weapon
   weight: 5
   possibleWeapon:

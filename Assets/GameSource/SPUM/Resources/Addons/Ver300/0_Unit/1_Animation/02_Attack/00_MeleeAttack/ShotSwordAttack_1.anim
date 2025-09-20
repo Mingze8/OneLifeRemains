@@ -3795,10 +3795,17 @@ AnimationClip:
   m_HasGenericRootTransform: 0
   m_HasMotionFloatCurves: 0
   m_Events:
-  - time: 0.41666666
-    functionName: ResetSpeed
+  - time: 0
+    functionName: setSpeed
     data: 
     objectReferenceParameter: {fileID: 0}
-    floatParameter: 0
-    intParameter: 0
+    floatParameter: 3
+    intParameter: 3
+    messageOptions: 0
+  - time: 0.33333334
+    functionName: setSpeed
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 5
+    intParameter: 5
     messageOptions: 0

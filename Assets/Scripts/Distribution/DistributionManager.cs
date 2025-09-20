@@ -28,7 +28,14 @@ public class DistributionManager : MonoBehaviour
     public List<LootSO> availableLoot;
     public int minLootItems = 1;
     public int maxLootItems = 3;
-    
+
+    private void Start()
+    {
+        if (availableLoot == null) 
+        {
+            Debug.LogError("Available Loot is empty");
+        }
+    }
 
     // Used iterate through each room and spawn contents in the room
     public void SpawnContent(List<Room> rooms, HashSet<Vector2Int> allFloorTiles, int offset)
