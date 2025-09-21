@@ -3173,7 +3173,7 @@ MonoBehaviour:
   dynamicAttackPoint: 1
   attackPointDistance: 0.7
   attackRange: 2
-  attackCooldown: 1.5
+  attackCooldown: 3
 --- !u!114 &-9222353387549015448
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3195,7 +3195,6 @@ MonoBehaviour:
     m_Bits: 128
   projectilePrefab: {fileID: 7277329722206000419, guid: 9d1d13c8d885b4d4094f5a60d0fae075, type: 3}
   magicProjectilePrefab: {fileID: 0}
-  projectileSpeed: 5
 --- !u!114 &2295794925059672282
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -63,9 +63,10 @@ public class Projectile : MonoBehaviour
             // If the shooter is the player, deal damage to the enemy
             if (shooter.CompareTag("Player"))
             {
-                collision.gameObject.GetComponent<EnemyHealth>().TakeDamage(damage);                
+                collision.gameObject.GetComponent<EnemyHealth>().TakeDamage(damage);
+                Destroy(gameObject);  // Destroy the projectile after collision
             }
-            Destroy(gameObject);  // Destroy the projectile after collision
+            Destroy(gameObject);
         }
         else if (collision.gameObject.CompareTag("Player"))
         {
@@ -74,8 +75,8 @@ public class Projectile : MonoBehaviour
             {
                 collision.gameObject.GetComponent<PlayerHealth>().changeHealth(-damage);
                 collision.gameObject.GetComponent<PlayerController>().Stunned(.5f);
-            }
-            Destroy(gameObject);  // Destroy the projectile after collision
+                Destroy(gameObject);  // Destroy the projectile after collision
+            }            
         }
     }
 }

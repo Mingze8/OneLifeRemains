@@ -4887,6 +4887,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 338fe163f2dc5cf469a02f45d7cc8b4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enemyType: 0
   patrolChancePerSecond: 0.5
   patrolSpeed: 1
   chaseSpeed: 2
@@ -4901,7 +4902,7 @@ MonoBehaviour:
   dynamicAttackPoint: 1
   attackPointDistance: 0.6
   attackRange: 0.6
-  attackCooldown: 1.5
+  attackCooldown: 3
 --- !u!114 &1848318770973151796
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4921,6 +4922,8 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 128
+  projectilePrefab: {fileID: 0}
+  magicProjectilePrefab: {fileID: 0}
 --- !u!114 &1035358726797952095
 MonoBehaviour:
   m_ObjectHideFlags: 0

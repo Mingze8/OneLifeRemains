@@ -7,15 +7,18 @@ public class MagicProjectile : MonoBehaviour
 {
     public float speed = 2f;
     public int damage = 2;  // Adjust damage as needed    
+    public float aoeRadius = 2f;
 
     private Vector2 moveDirection;
     private Vector2 spawnPosition;
     private float maxRange;  // Maximum range for the projectile
 
     public GameObject shooter;
+    private Animator anim;
 
     public void Initialize(Vector2 direction, float attackRange, GameObject firedBy)
     {
+        anim = GetComponent<Animator>();
         moveDirection = direction.normalized;  // Normalize the direction to avoid inconsistent speed
         spawnPosition = transform.position;
         maxRange = attackRange;
@@ -51,28 +54,43 @@ public class MagicProjectile : MonoBehaviour
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
-    {
+    {        
+        // Detect all colliders within AoE radius on collision
         if (collision.gameObject.CompareTag("Wall"))
         {
-            Destroy(gameObject);            
+            Explode();  // Trigger AoE damage on collision with wall
+            Destroy(gameObject);
         }
         else if (collision.gameObject.CompareTag("Enemy"))
         {
-            if (shooter.CompareTag("Player"))
-            {
-                collision.gameObject.GetComponent<EnemyHealth>().TakeDamage(damage);
-            }
-            Destroy(gameObject);  // Destroy the projectile after collision
+            Explode();  // Trigger AoE damage on collision with enemy
+            Destroy(gameObject);  // Destroy the projectile after explosion
         }
         else if (collision.gameObject.CompareTag("Player"))
         {
-            // If the shooter is an enemy, deal damage to the player
-            if (shooter.CompareTag("Enemy"))
+            Explode();  // Trigger AoE damage on collision with player
+            Destroy(gameObject);  // Destroy the projectile after explosion
+        }
+    }
+
+    private void Explode()
+    {
+        // Detect all enemies and players within the AoE radius
+        Collider2D[] hitObjects = Physics2D.OverlapCircleAll(transform.position, aoeRadius);
+
+        foreach (Collider2D hit in hitObjects)
+        {
+            if (hit.CompareTag("Enemy"))
             {
-                collision.gameObject.GetComponent<PlayerHealth>().changeHealth(-damage);
-                collision.gameObject.GetComponent<PlayerController>().Stunned(.5f);
+                // Apply damage to the enemy
+                hit.GetComponent<EnemyHealth>().TakeDamage(damage);                
             }
-            Destroy(gameObject);  // Destroy the projectile after collision
+            else if (hit.CompareTag("Player"))
+            {
+                // Apply damage to the player
+                hit.GetComponent<PlayerHealth>().changeHealth(-damage);
+                hit.GetComponent<PlayerController>().Stunned(0.5f);                
+            }
         }
     }
 }

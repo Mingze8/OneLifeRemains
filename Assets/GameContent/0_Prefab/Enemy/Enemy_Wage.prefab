@@ -4900,9 +4900,9 @@ MonoBehaviour:
     m_Bits: 128
   attackPointOffset: {x: 0, y: 0}
   dynamicAttackPoint: 1
-  attackPointDistance: 0.7
-  attackRange: 3
-  attackCooldown: 1.5
+  attackPointDistance: 0.5
+  attackRange: 2
+  attackCooldown: 3
 --- !u!114 &1848318770973151796
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4917,14 +4917,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   damage: 0
   attackPoint: {fileID: 4833012576751349297}
-  weaponRange: 0.5
+  weaponRange: 2
   stunTime: 0.5
   playerLayer:
     serializedVersion: 2
     m_Bits: 128
   projectilePrefab: {fileID: 0}
   magicProjectilePrefab: {fileID: 8700867336957629741, guid: eb0adbd48f4dfc743a60a65b23de6c88, type: 3}
-  projectileSpeed: 5
 --- !u!114 &1035358726797952095
 MonoBehaviour:
   m_ObjectHideFlags: 0

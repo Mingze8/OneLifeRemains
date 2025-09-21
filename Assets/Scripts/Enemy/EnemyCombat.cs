@@ -15,8 +15,7 @@ public class EnemyCombat : MonoBehaviour
 
     [Header("Ranged Attack Settings")]
     public GameObject projectilePrefab;
-    public GameObject magicProjectilePrefab;
-    public float projectileSpeed = 5f;
+    public GameObject magicProjectilePrefab;    
 
     public void Start()
     {
