@@ -10,12 +10,15 @@ public class Projectile : MonoBehaviour
     private Vector2 startPosition;
     private float maxRange;
 
+    public GameObject shooter; 
+
     // Set the direction of the projectile when it's created
-    public void Initialize(Vector2 direction, float attackRange)
+    public void Initialize(Vector2 direction, float attackRange, GameObject firedBy)
     {
         moveDirection = direction.normalized;  // Normalize the direction to avoid inconsistent speed
         startPosition = transform.position;
         maxRange = attackRange;
+        shooter = firedBy;
     }
 
     void Start()
@@ -49,20 +52,28 @@ public class Projectile : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        // Destroy the projectile when it collides with a wall, enemy, or any other object
+        // Destroy the projectile when it collides with a wall
         if (collision.gameObject.CompareTag("Wall"))
         {
-            Destroy(gameObject);            
+            Destroy(gameObject);
         }
         else if (collision.gameObject.CompareTag("Enemy"))
         {
-            Destroy(gameObject);
-            collision.gameObject.GetComponent<EnemyHealth>().TakeDamage(damage);
+            // If the shooter is the player, deal damage to the enemy
+            if (shooter.CompareTag("Player"))
+            {
+                collision.gameObject.GetComponent<EnemyHealth>().TakeDamage(damage);
+            }
+            Destroy(gameObject);  // Destroy the projectile after collision
         }
         else if (collision.gameObject.CompareTag("Player"))
         {
-            Destroy(gameObject);
-            collision.gameObject.GetComponent<PlayerHealth>().changeHealth(-damage);
+            // If the shooter is an enemy, deal damage to the player
+            if (shooter.CompareTag("Enemy"))
+            {
+                collision.gameObject.GetComponent<PlayerHealth>().changeHealth(-damage);
+            }
+            Destroy(gameObject);  // Destroy the projectile after collision
         }
     }
 }

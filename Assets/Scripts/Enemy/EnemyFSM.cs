@@ -71,7 +71,7 @@ public class EnemyFSM : MonoBehaviour
     [Header("Attack Settings")]
     public float attackRange = 2;
     public float attackCooldown = 2;
-    private float attackCooldownTimer;    
+    private float attackCooldownTimer;        
 
     private EnemyState currentState;
     private int facingDirection = 1;
@@ -283,17 +283,28 @@ public class EnemyFSM : MonoBehaviour
     {
         if (!isRoomActive || player == null) return;
 
+        if (enemyType == EnemyType.Ranged)
+        {
+            HandleRangedChasing();
+        }
+        else
+        {
+            HandleMeleeChasing();
+        }      
+    }
+
+    // Handle chasing behavior for melee enemies
+    private void HandleMeleeChasing()
+    {
         // Check if need to update chasing path
         bool shouldUpdatePath = false;
 
-        // if no path or over the path update interval
         if (chasePath == null || chasePath.Count == 0 ||
         Time.time - lastChasePathUpdate > pathUpdateInterval)
         {
             shouldUpdatePath = true;
         }
 
-        // if current path is finished
         if (chasePath != null && currentChasePointIndex >= chasePath.Count)
         {
             shouldUpdatePath = true;
@@ -310,17 +321,63 @@ public class EnemyFSM : MonoBehaviour
             ChaseAlongPath();
         }
         else
-        {            
+        {
             Vector2 direction = (player.position - transform.position).normalized;
             rb.velocity = direction * chaseSpeed;
             HandleChaseFlip(direction);
         }
     }
 
+    // Handle chasing behavior for ranged enemies
+    private void HandleRangedChasing()
+    {
+        if (!isRoomActive || player == null) return;
+
+        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
+        
+        // Simple chase behavior for ranged enemies that don't maintain distance
+        Vector2 direction = (player.position - transform.position).normalized;
+        rb.velocity = direction * chaseSpeed * 0.8f; // Slightly slower than melee
+        HandleChaseFlip(direction);
+        
+
+        // If we're within a certain range of the player, switch to attack state
+        if (distanceToPlayer <= attackRange && attackCooldownTimer <= 0)
+        {
+            attackCooldownTimer = attackCooldown;
+            ChangeState(EnemyState.Attacking);
+        }
+
+        // Update chase path if needed
+        if (chasePath == null || chasePath.Count == 0 || Time.time - lastChasePathUpdate > pathUpdateInterval)
+        {
+            UpdateChasePath();
+        }
+
+        // Follow the calculated chase path
+        if (chasePath != null && chasePath.Count > 0 && currentChasePointIndex < chasePath.Count)
+        {
+            Vector3 targetPosition = new Vector3(chasePath[currentChasePointIndex].x + 0.5f, chasePath[currentChasePointIndex].y + 0.25f, transform.position.z);
+            Vector2 directionToTarget = (targetPosition - transform.position).normalized;
+
+            // Move the enemy along the path
+            rb.velocity = directionToTarget * chaseSpeed;
+
+            // Flip the enemy based on direction
+            HandleChaseFlip(directionToTarget);
+
+            // If close to the next path point, move to the next one
+            if (Vector2.Distance(transform.position, targetPosition) < chasePathThreshold)
+            {
+                currentChasePointIndex++;
+            }
+        }
+    }
+
     // Recalculate and update the chase path to follow the player.
     private void UpdateChasePath()
     {
-        if (pathfinding == null) return;
+        if (pathfinding == null || player == null) return;
 
         Vector2Int enemyPos = new Vector2Int(Mathf.FloorToInt(transform.position.x), Mathf.FloorToInt(transform.position.y));
         Vector2Int playerPos = new Vector2Int(Mathf.FloorToInt(player.position.x), Mathf.FloorToInt(player.position.y));
@@ -334,7 +391,7 @@ public class EnemyFSM : MonoBehaviour
             lastChasePathUpdate = Time.time;
         }
         else
-        {            
+        {
             chasePath = null;
         }
     }
@@ -393,8 +450,11 @@ public class EnemyFSM : MonoBehaviour
             // Calculate direction from enemy to player
             Vector2 directionToPlayer = (player.position - transform.position).normalized;
 
+            // For ranged enemies, attack point can be further away
+            float effectiveDistance = enemyType == EnemyType.Ranged ? attackPointDistance * 1.5f : attackPointDistance;
+
             // Position attack point between enemy and player
-            currentAttackPoint = transform.position + (Vector3)(directionToPlayer * attackPointDistance);
+            currentAttackPoint = transform.position + (Vector3)(directionToPlayer * effectiveDistance);
 
             if (player.position.x > transform.position.x && facingDirection == 1 ||
                 player.position.x < transform.position.x && facingDirection == -1)
@@ -457,7 +517,20 @@ public class EnemyFSM : MonoBehaviour
 
             float distanceToPlayer = Vector2.Distance(currentAttackPoint, player.transform.position);
 
-            if (distanceToPlayer <= attackRange && attackCooldownTimer <= 0)
+            // Different attack logic based on enemy type
+            bool shouldAttack = false;
+
+            if (enemyType == EnemyType.Melee)
+            {
+                shouldAttack = distanceToPlayer <= attackRange && attackCooldownTimer <= 0;
+            }
+            else if (enemyType == EnemyType.Ranged)
+            {
+                // Ranged enemies can attack from further away but need line of sight
+                shouldAttack = distanceToPlayer <= attackRange && attackCooldownTimer <= 0;
+            }
+
+            if (shouldAttack)
             {
                 attackCooldownTimer = attackCooldown;
                 ChangeState(EnemyState.Attacking);
@@ -480,6 +553,7 @@ public class EnemyFSM : MonoBehaviour
     // Change the enemy’s state, stop previous actions, and start corresponding animations.
     public void ChangeState(EnemyState newState)
     {
+        Debug.Log("Entry Change State");
         // Don't change state if room is inactive unless it's to RoomInactive state
         if (!isRoomActive && newState != EnemyState.Inactive) return;
 
@@ -498,7 +572,7 @@ public class EnemyFSM : MonoBehaviour
         }
         else if (currentState == EnemyState.Attacking)
         {
-            anim.SetBool("isAttacking", false);
+            anim.SetBool("isAttacking", false);            
         }
         else if (currentState == EnemyState.Patrolling)
         {
@@ -520,7 +594,10 @@ public class EnemyFSM : MonoBehaviour
         {
             anim.SetBool("isMoving", true);
             isChasing = true;
-            UpdateChasePath();
+            if (enemyType == EnemyType.Melee)
+            {
+                UpdateChasePath(); // Only use pathfinding for melee enemies
+            }
         }
         else if (currentState == EnemyState.Attacking)
         {
@@ -590,13 +667,14 @@ public class EnemyFSM : MonoBehaviour
             Gizmos.DrawWireSphere(currentAttackPoint, playerDetectRange);
 
             // Draw attack range from attack point
-            Gizmos.color = Color.grey;
+            Gizmos.color = enemyType == EnemyType.Ranged ? Color.blue : Color.grey;
             Gizmos.DrawWireSphere(currentAttackPoint, attackRange);
+            
 
             // Draw line from enemy to attack point
             Gizmos.color = Color.cyan;
             Gizmos.DrawLine(transform.position, currentAttackPoint);
-        }        
+        }
 
         if (patrolPath != null && patrolPath.Count > 0)
         {
@@ -611,7 +689,7 @@ public class EnemyFSM : MonoBehaviour
 
         if (chasePath != null && chasePath.Count > 0)
         {
-            Gizmos.color = Color.red;
+            Gizmos.color = Color.cyan;
             for (int i = currentChasePointIndex; i < chasePath.Count - 1; i++)
             {
                 Vector3 start = new Vector3(chasePath[i].x + 0.5f, chasePath[i].y + 0.25f, 0);
@@ -633,6 +711,6 @@ public class EnemyFSM : MonoBehaviour
 
         // Draw room activity status
         Gizmos.color = isRoomActive ? Color.green : Color.gray;
-        Gizmos.DrawWireCube(transform.position, Vector3.one * 0.5f);
+        Gizmos.DrawWireCube(transform.position, Vector3.one * 0.5f);        
     }
 }

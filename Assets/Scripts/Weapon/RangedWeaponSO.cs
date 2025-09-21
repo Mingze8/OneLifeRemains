@@ -60,7 +60,7 @@ public class RangedWeaponSO : WeaponSO
             rb.velocity = direction * attackRange;  // Set the velocity in the firing direction
         }
 
-        projectile.GetComponent<Projectile>().Initialize(direction, attackRange);
+        projectile.GetComponent<Projectile>().Initialize(direction, attackRange, player);
         Debug.Log("Fired ranged weapon!");
     }
 

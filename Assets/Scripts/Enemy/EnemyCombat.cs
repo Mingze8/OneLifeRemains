@@ -38,7 +38,7 @@ public class EnemyCombat : MonoBehaviour
         }
     }
 
-    private void RangedAttack()
+    public void RangedAttack()
     {
         if (projectilePrefab != null)
         {
@@ -53,7 +53,7 @@ public class EnemyCombat : MonoBehaviour
             Projectile projectileScript = projectile.GetComponent<Projectile>();
             if (projectileScript != null)
             {
-                projectileScript.Initialize(attackDirection, fsm.playerDetectRange);
+                projectileScript.Initialize(attackDirection, fsm.playerDetectRange, gameObject);
             }
         }
     }

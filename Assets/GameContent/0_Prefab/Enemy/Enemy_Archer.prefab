@@ -3027,7 +3027,7 @@ GameObject:
   - component: {fileID: -5308565057339678290}
   m_Layer: 8
   m_Name: Enemy_Archer
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3073,7 +3073,7 @@ Animator:
   m_GameObject: {fileID: 5331485203839579108}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: f0d8f5cd22aef8e4d9341a42f64a9a34, type: 2}
+  m_Controller: {fileID: 9100000, guid: d97995adb90abd6489a629359c8d80de, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -3158,20 +3158,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 338fe163f2dc5cf469a02f45d7cc8b4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enemyType: 1
   patrolChancePerSecond: 0.5
   patrolSpeed: 1
   chaseSpeed: 2
   pathUpdateInterval: 0.5
   chasePathThreshold: 0.3
   playerDetectRange: 4
-  detectionPoint: {fileID: 1309203566767671301}
+  detectionPoint: {fileID: 0}
   playerLayer:
     serializedVersion: 2
     m_Bits: 128
   attackPointOffset: {x: 0, y: 0}
   dynamicAttackPoint: 1
-  attackPointDistance: 0.6
-  attackRange: 0.6
+  attackPointDistance: 0.7
+  attackRange: 2
   attackCooldown: 1.5
 --- !u!114 &-9222353387549015448
 MonoBehaviour:

@@ -131,7 +131,7 @@ public class WeaponController : MonoBehaviour
 
         currentWeaponInstance.transform.up = mouseDirection;
 
-        float weaponReach = 0f;
+        float weaponReach = 1f;
 
         if (currentWeapon is MeleeWeaponSO meleeWeapon)
         {
