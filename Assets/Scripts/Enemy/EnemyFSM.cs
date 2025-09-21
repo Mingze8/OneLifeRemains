@@ -13,10 +13,19 @@ public enum EnemyState
     Inactive
 }
 
+public enum EnemyType
+{
+    Melee,
+    Ranged
+}
+
 public class EnemyFSM : MonoBehaviour
 {
     private DungeonGenerator dungeonGenerator;
     private HashSet<Vector2Int> allFloorTiles;
+
+    [Header("Enemy Type")]
+    public EnemyType enemyType = EnemyType.Melee;
 
     [Header("Room Management")]
     private int myRoomIndex = -1;
@@ -50,10 +59,19 @@ public class EnemyFSM : MonoBehaviour
     public Transform detectionPoint;
     public LayerMask playerLayer;
 
+    [Header("Dynamic Attack Point")]
+    [Tooltip("Offset from enemy position for attack detection")]
+    public Vector2 attackPointOffset = new Vector2(0f, 0f);
+    [Tooltip("Should attack point move towards player")]
+    public bool dynamicAttackPoint = true;
+    [Tooltip("Distance from enemy center to attack point when following player")]
+    public float attackPointDistance = 1f;
+    private Vector3 currentAttackPoint;
+
     [Header("Attack Settings")]
     public float attackRange = 2;
     public float attackCooldown = 2;
-    private float attackCooldownTimer;
+    private float attackCooldownTimer;    
 
     private EnemyState currentState;
     private int facingDirection = 1;
@@ -76,6 +94,8 @@ public class EnemyFSM : MonoBehaviour
         anim = GetComponent<Animator>();
         pathfinding = GetComponent<AStarPathfinding>();
 
+        UpdateAttackPoint();
+
         ChangeState(EnemyState.Idle);
     }
 
@@ -86,6 +106,8 @@ public class EnemyFSM : MonoBehaviour
         {
             attackCooldownTimer -= Time.deltaTime;
         }
+
+        UpdateAttackPoint();
 
         // Only update AI if room is active
         if (!isRoomActive)
@@ -364,6 +386,47 @@ public class EnemyFSM : MonoBehaviour
         rb.velocity = Vector2.zero;
     }
 
+    private void UpdateAttackPoint()
+    {
+        if (dynamicAttackPoint && player != null)
+        {
+            // Calculate direction from enemy to player
+            Vector2 directionToPlayer = (player.position - transform.position).normalized;
+
+            // Position attack point between enemy and player
+            currentAttackPoint = transform.position + (Vector3)(directionToPlayer * attackPointDistance);
+
+            if (player.position.x > transform.position.x && facingDirection == 1 ||
+                player.position.x < transform.position.x && facingDirection == -1)
+            {
+                Flip();
+            }
+        }
+        else
+        {
+            // Use static detection point or offset from enemy position
+            if (detectionPoint != null)
+            {
+                currentAttackPoint = detectionPoint.position;
+            }
+            else
+            {
+                currentAttackPoint = transform.position + (Vector3)attackPointOffset;
+            }
+        }
+    }
+
+    public Vector3 GetAttackPoint()
+    {
+        return currentAttackPoint;
+    }
+
+    public Vector2 GetAttackDirection()
+    {
+        if (player == null) return Vector2.zero;
+
+        return (player.position - currentAttackPoint).normalized;
+    }
 
     // -----------------------------------------------   ENEMY ATTACK STATE - END  ----------------------------------------------- //
 
@@ -386,18 +449,20 @@ public class EnemyFSM : MonoBehaviour
     {
         if (!isRoomActive) return;
 
-        Collider2D[] hits = Physics2D.OverlapCircleAll(detectionPoint.position, playerDetectRange, playerLayer);
+        Collider2D[] hits = Physics2D.OverlapCircleAll(currentAttackPoint, playerDetectRange, playerLayer);
 
         if (hits.Length > 0)
         {            
             player = hits[0].transform;
 
-            if (Vector2.Distance(transform.position, player.transform.position) <= attackRange && attackCooldownTimer <= 0)
+            float distanceToPlayer = Vector2.Distance(currentAttackPoint, player.transform.position);
+
+            if (distanceToPlayer <= attackRange && attackCooldownTimer <= 0)
             {
                 attackCooldownTimer = attackCooldown;
                 ChangeState(EnemyState.Attacking);
             }
-            else if (Vector2.Distance(transform.position, player.position) > attackRange && currentState != EnemyState.Attacking && currentState != EnemyState.Chasing && currentState != EnemyState.Inactive)
+            else if (distanceToPlayer > attackRange && currentState != EnemyState.Attacking && currentState != EnemyState.Chasing && currentState != EnemyState.Inactive)
             {
                 ChangeState(EnemyState.Chasing);
             }
@@ -518,8 +583,20 @@ public class EnemyFSM : MonoBehaviour
     // Draw gizmos for visualizing the detection range and patrol path in the editor.
     private void OnDrawGizmosSelected()
     {
+        // Draw detection range from current attack point
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(detectionPoint.position, playerDetectRange);
+        if (Application.isPlaying)
+        {
+            Gizmos.DrawWireSphere(currentAttackPoint, playerDetectRange);
+
+            // Draw attack range from attack point
+            Gizmos.color = Color.grey;
+            Gizmos.DrawWireSphere(currentAttackPoint, attackRange);
+
+            // Draw line from enemy to attack point
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(transform.position, currentAttackPoint);
+        }        
 
         if (patrolPath != null && patrolPath.Count > 0)
         {
@@ -541,7 +618,7 @@ public class EnemyFSM : MonoBehaviour
                 Vector3 end = new Vector3(chasePath[i + 1].x + 0.5f, chasePath[i + 1].y + 0.25f, 0);
                 Gizmos.DrawLine(start, end);
             }
-            
+
             if (currentChasePointIndex < chasePath.Count)
             {
                 Vector3 currentTarget = new Vector3(

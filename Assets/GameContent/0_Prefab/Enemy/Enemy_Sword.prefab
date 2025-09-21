@@ -4889,15 +4889,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   patrolChancePerSecond: 0.5
   patrolSpeed: 1
-  chaseSpeed: 3
+  chaseSpeed: 2
   pathUpdateInterval: 0.5
   chasePathThreshold: 0.3
-  playerDetectRange: 5
+  playerDetectRange: 4
   detectionPoint: {fileID: 7470287272718566291}
   playerLayer:
     serializedVersion: 2
     m_Bits: 128
-  attackRange: 0.75
+  attackPointOffset: {x: 0, y: 0}
+  dynamicAttackPoint: 1
+  attackPointDistance: 0.6
+  attackRange: 0.6
   attackCooldown: 1.5
 --- !u!114 &1848318770973151796
 MonoBehaviour:

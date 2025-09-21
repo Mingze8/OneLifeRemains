@@ -25,7 +25,7 @@ public class WeaponController : MonoBehaviour
     public float horizontalOffset = 0f; // Horizontal offset
     public float verticalOffset = 0.35f; // Vertical offset
     public float attackPointDistance = 3f; // Default distance
-    public float minAttackDistance = 1.2f; // Minimum attack distance from player'    
+    public float minAttackDistance = 1.2f; // Minimum attack distance from player
 
     void Start()
     {

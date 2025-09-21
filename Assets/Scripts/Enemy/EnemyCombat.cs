@@ -4,15 +4,30 @@ using UnityEngine;
 
 public class EnemyCombat : MonoBehaviour
 {
+    private EnemyFSM fsm;
     public int damage = 1;
 
     [Header("Attack Area Settings")]
     public Transform attackPoint;
     public float weaponRange;
     public float stunTime;
-    public LayerMask playerLayer;    
+    public LayerMask playerLayer;
 
-    public void Attack()
+    [Header("Ranged Attack Settings")]
+    public GameObject projectilePrefab;
+    public float projectileSpeed = 5f;
+
+    public void Start()
+    {
+        fsm = GetComponent<EnemyFSM>();
+    }
+
+    private void Update()
+    {
+        attackPoint.position = fsm.GetAttackPoint();
+    }    
+
+    public void MeleeAttack()
     {
         Collider2D[] hits = Physics2D.OverlapCircleAll(attackPoint.position, weaponRange, playerLayer);
 
@@ -22,6 +37,27 @@ public class EnemyCombat : MonoBehaviour
             hits[0].GetComponent<PlayerController>().Stunned(stunTime);
         }
     }
+
+    private void RangedAttack()
+    {
+        if (projectilePrefab != null)
+        {
+            // Get direction from attack point towards player
+            Vector2 attackDirection = fsm.GetAttackDirection();
+            if (attackDirection == Vector2.zero) return;
+
+            // Spawn projectile at attack point
+            GameObject projectile = Instantiate(projectilePrefab, attackPoint.position, Quaternion.identity);
+
+            // Initialize projectile
+            Projectile projectileScript = projectile.GetComponent<Projectile>();
+            if (projectileScript != null)
+            {
+                projectileScript.Initialize(attackDirection, fsm.playerDetectRange);
+            }
+        }
+    }
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;

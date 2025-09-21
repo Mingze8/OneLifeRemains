@@ -9,17 +9,17 @@ public class MeleeWeaponSO : WeaponSO
     {
         animator.SetTrigger("AttackMelee");
 
-        // 攻击位置基于计算后的 attackPoint
+        // attack point based on calculated attackPoint
         Vector2 attackPosition = attackPoint.position;
-
-        // 检测敌人是否在攻击范围内
+        
         Collider2D[] enemiesInRange = Physics2D.OverlapCircleAll(attackPosition, attackRange);
 
         foreach (var enemy in enemiesInRange)
         {
             if (enemy.CompareTag("Enemy"))
             {
-                enemy.GetComponent<EnemyHealth>().TakeDamage(baseAttackPower); 
+                enemy.GetComponent<EnemyHealth>().TakeDamage(baseAttackPower);
+                break;
             }
         }
     }
