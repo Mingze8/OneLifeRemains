@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4859b5bf683d950429e2c53ac6aef6a2, type: 3}
-  m_Name: Bow
+  m_Script: {fileID: 11500000, guid: 45951b59e3c9ee94eb9912a5024d8b07, type: 3}
+  m_Name: Wage
   m_EditorClassIdentifier: 
-  weaponName: Bow
+  enemyName: Wage
   weight: 5
-  weaponPrefab: {fileID: 1941636751970302256, guid: 636ef5bda3c5b5849953d6f8e36b21ac, type: 3}
+  enemyPrefab: {fileID: 9196052413352660363, guid: 319c61a6df0c171489d7ca998eb64add, type: 3}

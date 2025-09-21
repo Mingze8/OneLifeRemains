@@ -679,6 +679,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 708250523}
   m_CullTransparentMesh: 1
+--- !u!1 &916427444
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 916427446}
+  - component: {fileID: 916427445}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &916427445
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 916427444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e18dc24fca2c5b49af7ac2343dc26c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &916427446
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 916427444}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 70.496826, y: 66.569725, z: -0.018368987}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1028057567
 GameObject:
   m_ObjectHideFlags: 0
@@ -912,7 +956,7 @@ GameObject:
   - component: {fileID: 1437002450}
   m_Layer: 0
   m_Name: Wall
-  m_TagString: Untagged
+  m_TagString: Wall
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1385,7 +1429,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemies:
   - {fileID: 11400000, guid: 86afd8abb84066a47ba3c6a172fe4828, type: 2}
-  - {fileID: 11400000, guid: 83e32850bb0dbf84e876b51d01888024, type: 2}
   lootChests:
   - {fileID: 11400000, guid: bdaeee8d53cea9545b701a1bc81e3bfe, type: 2}
   - {fileID: 11400000, guid: dfaa1f62ec0f14e4991dd02b28faf85e, type: 2}
@@ -1395,7 +1438,7 @@ MonoBehaviour:
   maxLootChestsPerRoom: 2
   showDebugLogs: 1
   availableLoot:
-  - {fileID: 11400000, guid: 54b67583087235b4d935c0034dbd9115, type: 2}
+  - {fileID: 11400000, guid: 50dc48ec96998684fbe2cd3134455bf0, type: 2}
   - {fileID: 11400000, guid: 829daf3e1a546874fa6519f147214382, type: 2}
   minLootItems: 1
   maxLootItems: 3
@@ -1726,3 +1769,4 @@ SceneRoots:
   - {fileID: 1028057570}
   - {fileID: 1791916535}
   - {fileID: 369228676}
+  - {fileID: 916427446}
