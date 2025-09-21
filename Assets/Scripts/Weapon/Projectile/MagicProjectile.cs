@@ -12,11 +12,14 @@ public class MagicProjectile : MonoBehaviour
     private Vector2 spawnPosition;
     private float maxRange;  // Maximum range for the projectile
 
-    public void Initialize(Vector2 direction, float attackRange)
+    public GameObject shooter;
+
+    public void Initialize(Vector2 direction, float attackRange, GameObject firedBy)
     {
         moveDirection = direction.normalized;  // Normalize the direction to avoid inconsistent speed
         spawnPosition = transform.position;
         maxRange = attackRange;
+        shooter = firedBy;
     }
 
     void Start()
@@ -55,8 +58,21 @@ public class MagicProjectile : MonoBehaviour
         }
         else if (collision.gameObject.CompareTag("Enemy"))
         {
-            Destroy(gameObject);
-            collision.gameObject.GetComponent<EnemyHealth>().TakeDamage(damage);
+            if (shooter.CompareTag("Player"))
+            {
+                collision.gameObject.GetComponent<EnemyHealth>().TakeDamage(damage);
+            }
+            Destroy(gameObject);  // Destroy the projectile after collision
+        }
+        else if (collision.gameObject.CompareTag("Player"))
+        {
+            // If the shooter is an enemy, deal damage to the player
+            if (shooter.CompareTag("Enemy"))
+            {
+                collision.gameObject.GetComponent<PlayerHealth>().changeHealth(-damage);
+                collision.gameObject.GetComponent<PlayerController>().Stunned(.5f);
+            }
+            Destroy(gameObject);  // Destroy the projectile after collision
         }
     }
 }

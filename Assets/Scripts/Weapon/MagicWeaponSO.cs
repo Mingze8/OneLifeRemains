@@ -43,7 +43,7 @@ public class MagicWeaponSO : WeaponSO
             rb.velocity = direction * 5f;  // Use the spell range to set the projectile speed
         }
 
-        magicProjectile.GetComponent<MagicProjectile>().Initialize(direction, spellRange);
+        magicProjectile.GetComponent<MagicProjectile>().Initialize(direction, spellRange, player);
 
         Debug.Log("Magic spell casted!");
     }    

@@ -15,6 +15,7 @@ public class EnemyCombat : MonoBehaviour
 
     [Header("Ranged Attack Settings")]
     public GameObject projectilePrefab;
+    public GameObject magicProjectilePrefab;
     public float projectileSpeed = 5f;
 
     public void Start()
@@ -40,22 +41,36 @@ public class EnemyCombat : MonoBehaviour
 
     public void RangedAttack()
     {
-        if (projectilePrefab != null)
-        {
-            // Get direction from attack point towards player
-            Vector2 attackDirection = fsm.GetAttackDirection();
-            if (attackDirection == Vector2.zero) return;
+        
+        // Get direction from attack point towards player
+        Vector2 attackDirection = fsm.GetAttackDirection();
+        if (attackDirection == Vector2.zero) return;
 
-            // Spawn projectile at attack point
+        // Check if it's a magic attack (you can set some condition for magic attack like a special flag or time)
+        if (magicProjectilePrefab != null)
+        {
+            // Spawn magic projectile
+            GameObject magicProjectile = Instantiate(magicProjectilePrefab, attackPoint.position, Quaternion.identity);
+
+            // Initialize the magic projectile
+            MagicProjectile magicProjectileScript = magicProjectile.GetComponent<MagicProjectile>();
+            if (magicProjectileScript != null)
+            {
+                magicProjectileScript.Initialize(attackDirection, fsm.playerDetectRange, gameObject);
+            }
+        }
+        else if (projectilePrefab != null) 
+        {
+            // Spawn regular ranged projectile (normal attack)
             GameObject projectile = Instantiate(projectilePrefab, attackPoint.position, Quaternion.identity);
 
-            // Initialize projectile
+            // Initialize regular projectile
             Projectile projectileScript = projectile.GetComponent<Projectile>();
             if (projectileScript != null)
             {
                 projectileScript.Initialize(attackDirection, fsm.playerDetectRange, gameObject);
             }
-        }
+        }        
     }
 
     private void OnDrawGizmosSelected()

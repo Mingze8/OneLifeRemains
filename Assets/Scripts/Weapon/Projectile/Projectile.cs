@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Projectile : MonoBehaviour
@@ -10,11 +11,11 @@ public class Projectile : MonoBehaviour
     private Vector2 startPosition;
     private float maxRange;
 
-    public GameObject shooter; 
+    public GameObject shooter;
 
     // Set the direction of the projectile when it's created
     public void Initialize(Vector2 direction, float attackRange, GameObject firedBy)
-    {
+    {        
         moveDirection = direction.normalized;  // Normalize the direction to avoid inconsistent speed
         startPosition = transform.position;
         maxRange = attackRange;
@@ -22,7 +23,7 @@ public class Projectile : MonoBehaviour
     }
 
     void Start()
-    {
+    {        
         // Make sure the projectile faces the direction it’s going when it starts
         RotateProjectile(moveDirection);
     }
@@ -62,7 +63,7 @@ public class Projectile : MonoBehaviour
             // If the shooter is the player, deal damage to the enemy
             if (shooter.CompareTag("Player"))
             {
-                collision.gameObject.GetComponent<EnemyHealth>().TakeDamage(damage);
+                collision.gameObject.GetComponent<EnemyHealth>().TakeDamage(damage);                
             }
             Destroy(gameObject);  // Destroy the projectile after collision
         }
@@ -72,6 +73,7 @@ public class Projectile : MonoBehaviour
             if (shooter.CompareTag("Enemy"))
             {
                 collision.gameObject.GetComponent<PlayerHealth>().changeHealth(-damage);
+                collision.gameObject.GetComponent<PlayerController>().Stunned(.5f);
             }
             Destroy(gameObject);  // Destroy the projectile after collision
         }
