@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Loot : MonoBehaviour
@@ -41,6 +42,16 @@ public class Loot : MonoBehaviour
         {
             {
                 anim.Play("LootPickup");
+
+                if (lootSO.weapon != null)
+                {
+                    var weaponInventory = collision.GetComponent<WeaponInventory>();
+                    if (weaponInventory != null) 
+                    {
+                        weaponInventory.AddWeapon(lootSO.weapon);
+                    }
+                }
+
                 OnItemLooted?.Invoke(lootSO, quantity);
                 Destroy(gameObject, .5f);
             }

@@ -4,6 +4,7 @@ public class WeaponController : MonoBehaviour
 {
     private PlayerController playerController;
     private WeaponInventory weaponInventory;
+    private WeaponUIManager weaponUIManager;
     public WeaponSO currentWeapon;
 
     private GameObject currentWeaponInstance;
@@ -33,6 +34,7 @@ public class WeaponController : MonoBehaviour
         playerController = GetComponent<PlayerController>();
         weaponInventory = GetComponent<WeaponInventory>();
         playerAnimator = GetComponent<Animator>();
+        weaponUIManager = GetComponent<WeaponUIManager>();
         EquipWeapon();
 
         // Ensure AttackPoint is assigned (find by name or assign in the inspector)
@@ -60,16 +62,30 @@ public class WeaponController : MonoBehaviour
             timer -= Time.deltaTime;
         }
 
-        if (Input.GetKeyDown(KeyCode.Q))
+        if (Input.GetKeyDown(KeyCode.E))
         {
             weaponInventory.SwitchToNextWeapon();
             EquipWeapon();
         }
 
-        if (Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.Q))
         {
             weaponInventory.SwitchToPreviousWeapon();
             EquipWeapon();
+        }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            if (currentWeapon is RangedWeaponSO rangedWeapon)
+            {
+                int currentAmmo = rangedWeapon.GetCurrentAmmo();
+
+                if (currentAmmo < rangedWeapon.ammoCapacity)
+                {
+                    rangedWeapon.ReloadWeapon();                    
+                }
+                
+            }
         }
 
         if (Input.GetMouseButtonDown(0))
@@ -84,19 +100,13 @@ public class WeaponController : MonoBehaviour
             else if (!(currentWeapon is MagicWeaponSO) && timer <= 0)
             {                                
                 // Handle other weapon types (melee, ranged)
-                currentWeapon.UseWeapon(gameObject, playerAnimator, attackPoint, mouseDirection);
-                timer = attackCooldown;
+                currentWeapon.UseWeapon(gameObject, playerAnimator, attackPoint, mouseDirection);                
+                timer = attackCooldown;                
             }
         }
-
-        //// Update attack position every frame to always show the Gizmos
-        //if (currentWeapon != null)
-        //{
-        //    attackPosition = currentWeapon.GetAttackPosition(gameObject, attackPoint, playerAnimator, mouseDirection);
-        //}
     }
 
-    private void EquipWeapon()
+    public void EquipWeapon()
     {
         currentWeapon = weaponInventory.GetCurrentWeapon();
 

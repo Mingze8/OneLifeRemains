@@ -59,7 +59,7 @@ public class LootChestInteraction : MonoBehaviour
     {
         if (isPlayerNear && player != null)
         {
-            if (Input.GetKeyDown(KeyCode.E))
+            if (Input.GetKeyDown(KeyCode.Z))
             {
                 OpenLootChest();
                 chestAnimator.SetTrigger("openChest");
