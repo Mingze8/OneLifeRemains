@@ -152,9 +152,7 @@ public class EnemyFSM : MonoBehaviour
 
     // Stop movement and animations when the room is inactive.
     private void HandleInactiveState()
-    {
-        Debug.Log("No Moving!");
-
+    {        
         // Stop all movement and animations
         rb.velocity = Vector2.zero;
 
@@ -552,8 +550,7 @@ public class EnemyFSM : MonoBehaviour
 
     // Change the enemy’s state, stop previous actions, and start corresponding animations.
     public void ChangeState(EnemyState newState)
-    {
-        Debug.Log("Entry Change State");
+    {        
         // Don't change state if room is inactive unless it's to RoomInactive state
         if (!isRoomActive && newState != EnemyState.Inactive) return;
 

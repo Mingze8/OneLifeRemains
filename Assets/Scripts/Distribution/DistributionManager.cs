@@ -8,6 +8,12 @@ public class DistributionManager : MonoBehaviour
     [Header("Enemy Settings")]
     public List<EnemySO> enemies; // List of enemy ScriptableObjects
 
+    [Header("Weapon Settings")]
+    public List<WeaponSO> weapons;
+
+    [Header("Potion Settings")]
+    public List<PotionSO> potions;
+
     [Header("Loot Chest Settings")]
     public List<LootChestSO> lootChests; // List of loot chest ScriptableObjects
 
@@ -19,23 +25,14 @@ public class DistributionManager : MonoBehaviour
     public int maxLootChestsPerRoom = 2;
 
     [Header("Debug")]
-    public bool showDebugLogs = true;
-
-    // Probability of spawning a loot chest for next room
-    private float lootChestSpawnChance = 0.5f;
+    public bool showDebugLogs = true;    
 
     [Header("Loot Distribution Settings")]
-    public List<LootSO> availableLoot;
+    // Probability of spawning a loot chest for next room
+    public float lootChestSpawnChance = 0.5f;
+
     public int minLootItems = 1;
     public int maxLootItems = 3;
-
-    private void Start()
-    {
-        if (availableLoot == null) 
-        {
-            Debug.LogError("Available Loot is empty");
-        }
-    }
 
     // Used iterate through each room and spawn contents in the room
     public void SpawnContent(List<Room> rooms, HashSet<Vector2Int> allFloorTiles, int offset)
@@ -321,12 +318,6 @@ public class DistributionManager : MonoBehaviour
     {
         List<GameObject> generatedLoot = new List<GameObject>();
 
-        if (availableLoot == null)
-        {
-            Debug.LogWarning("GenerateChestLoot: GenerateChestLoot: No loot available");
-            return generatedLoot;
-        }
-
         // Determine how many loot items to generate
         int lootItemsToGenerate = Random.Range(minLootItems, maxLootItems + 1);
 
@@ -350,123 +341,117 @@ public class DistributionManager : MonoBehaviour
 
     private GameObject GenerateRandomLootItem()
     {
-        LootSO selectedLootType = WeightedRandom.SelectRandom(availableLoot, loot => loot.weight);
+        LootType selectedLootType = LootSO.SelectRandomLootType();
 
-        if (selectedLootType == null)
+        if (showDebugLogs)
         {
-            Debug.LogError("GenerateRandomLootItem: Failed to select loot item!");
-            return null;
+            Debug.Log($"GenerateRandomLootItem: Selected loot type: {selectedLootType}");            
         }
 
         // Handle different loot types
         switch (selectedLootType)
         {
-            case EnemyLootSO enemyLoot:
-                return GenerateEnemyLoot(enemyLoot);
+            case LootType.Enemy:                
+                return GenerateEnemyLootByType();
 
-            case WeaponLootSO weaponLoot:
-                return GenerateWeaponLoot(weaponLoot);
+            case LootType.Weapon:                
+                return GenerateWeaponLootByType();
+
+            case LootType.Potion:
+                return GeneratePotionLootByType();
 
             default:
-                Debug.LogWarning($"GenerateRandomLootItem: Unknown loot type: {selectedLootType.GetType().Name}");
+                Debug.LogWarning($"GenerateRandomLootItem: Unknown loot type: {selectedLootType}");
                 return null;
         }
     }
 
-    // Generate enemy-based loot
-    private GameObject GenerateEnemyLoot(EnemyLootSO enemyLoot)
+    // Generate enemy loot without needing a specific LootSO
+    private GameObject GenerateEnemyLootByType()
     {
-        if (enemyLoot.possibleEnemies == null)
+        if (enemies == null || enemies.Count == 0)
         {
-            Debug.LogError("GenerateEnemyLoot: Enemy loot has no possible enemies configured");
+            Debug.LogError("GenerateEnemyLootByType: No enemies available in the enemies list");
             return null;
         }
 
-        // Create a container for this enemy loot
-        GameObject enemyLootContainer = new GameObject($"EnemyLoot_{enemyLoot.lootName}");
+        // Use weighted random selection from the global enemies list
+        EnemySO selectedEnemy = WeightedRandom.SelectRandom(enemies, enemy => enemy.weight);
 
-        //Determine how many enemies to spawn
-        int enemyCount = Random.Range(enemyLoot.minEnemyCount, enemyLoot.maxEnemyCount + 1);
+        if (selectedEnemy == null || selectedEnemy.enemyPrefab == null)
+        {
+            Debug.LogError("GenerateEnemyLootByType: Selected enemy is null or has no prefab");
+            return null;
+        }
+
+        // Create the enemy GameObject
+        GameObject spawnedEnemy = Instantiate(selectedEnemy.enemyPrefab);
+        spawnedEnemy.name = $"EnemyLoot_{selectedEnemy.enemyName}";
 
         if (showDebugLogs)
         {
-            Debug.Log($"GenerateEnemyLoot: Generating {enemyCount} enemies from {enemyLoot.lootName}");
+            Debug.Log($"GenerateEnemyLootByType: Spawned {selectedEnemy.enemyName} as loot (Enemy Weight: {selectedEnemy.weight})");
         }
 
-        // Convert array to list for weighted selection
-        List<EnemySO> enemyList = new List<EnemySO>(enemyLoot.possibleEnemies);
-
-        for (int i = 0; i < enemyCount; i++)
-        {
-            // Select enemy based on weight
-            EnemySO selectedEnemy = WeightedRandom.SelectRandom(enemyList, enemy => enemy.weight);
-
-            if (selectedEnemy != null && selectedEnemy.enemyPrefab != null)
-            {
-                // Create the enemy GameObject
-                GameObject spawnedEnemy = Instantiate(selectedEnemy.enemyPrefab);
-                spawnedEnemy.transform.SetParent(enemyLootContainer.transform);               
-
-                if (showDebugLogs)
-                {
-                    Debug.Log($"GenerateEnemyLoot: Spawned {selectedEnemy.enemyName} as loot (Weight: {selectedEnemy.weight})");
-                }
-            }
-            else
-            {
-                Debug.LogError("GenerateEnemyLoot: Selected enemy is null or has no prefab");
-            }
-        }
-
-        return enemyLootContainer;
+        return spawnedEnemy;
     }
 
-    // Generate weapon-based loot using weighted selection
-    private GameObject GenerateWeaponLoot(WeaponLootSO weaponLoot)
+    // Generate weapon loot without needing a specific LootSO
+    private GameObject GenerateWeaponLootByType()
     {
-        if (weaponLoot.possibleWeapon == null)
+        if (weapons == null || weapons.Count == 0)
         {
-            Debug.LogError("GenerateWeaponLoot: Weapon loot has no possible weapons configured");
+            Debug.LogError("GenerateWeaponLootByType: No weapons available in the weapons list");
             return null;
         }
 
-        // Convert array to list for weighted selection
-        List<WeaponSO> weaponList = new List<WeaponSO>(weaponLoot.possibleWeapon);
-
-        // Select weapon based on weight
-        WeaponSO selectedWeapon = WeightedRandom.SelectRandom(weaponList, weapon => weapon.weight);
+        // Use weighted random selection from the global weapons list
+        WeaponSO selectedWeapon = WeightedRandom.SelectRandom(weapons, weapon => weapon.weight);
 
         if (selectedWeapon == null)
         {
-            Debug.LogError("GenerateWeaponLoot: Failed to select weapon based on weight");
+            Debug.LogError("GenerateWeaponLootByType: Failed to select weapon using weighted random");
             return null;
-        }
+        }        
 
-        // Create weapon loot item using the weapon's prefab
-        GameObject weaponLootItem = CreateWeaponLootItem(selectedWeapon);
+        GameObject spawnedWeapon = Instantiate(selectedWeapon.weaponPrefab);
+        spawnedWeapon.name = $"WeaponLoot_{selectedWeapon.weaponName}";        
 
-        if (showDebugLogs && weaponLootItem != null)
+        if (showDebugLogs)
         {
-            Debug.Log($"GenerateWeaponLoot: Generated weapon loot: {selectedWeapon.weaponName} (Weight: {selectedWeapon.weight})");
+            Debug.Log($"GenerateWeaponLootByType: Generated weapon loot: {selectedWeapon.weaponName} (Weapon Weight: {selectedWeapon.weight})");
         }
 
-        return weaponLootItem;
+        return spawnedWeapon;
     }
 
-    // Create a weapon loot item GameObject using the weapon prefab
-    private GameObject CreateWeaponLootItem(WeaponSO weaponSO)
+    // Generate weapon loot without needing a specific LootSO
+    private GameObject GeneratePotionLootByType()
     {
-        if (weaponSO.weaponPrefab == null)
+        if (potions == null || potions.Count == 0)
         {
-            Debug.LogError($"CreateWeaponLootItem: Weapon {weaponSO.weaponName} has no prefab assigned!");
+            Debug.LogError("GeneratePotionLootByType: No potion available in the potion list");
             return null;
         }
 
-        // Instantiate the weapon prefab
-        GameObject weaponItem = Instantiate(weaponSO.weaponPrefab);
-        weaponItem.name = $"WeaponLoot_{weaponSO.weaponName}";
+        // Use weighted random selection from the global weapons list
+        PotionSO selectedPotion = WeightedRandom.SelectRandom(potions, potion => potion.weight);
 
-        return weaponItem;
+        if (selectedPotion == null)
+        {
+            Debug.LogError("GeneratePotionLootByType: Failed to select potion using weighted random");
+            return null;
+        }
+
+        GameObject spawnedPotion = Instantiate(selectedPotion.potionPrefab);
+        spawnedPotion.name = $"PotionLoot_{selectedPotion.potionName}";
+
+        if (showDebugLogs)
+        {
+            Debug.Log($"GeneratePotionLootByType: Generated potion loot: {selectedPotion.potionName} (Potion Weight: {selectedPotion.weight})");
+        }
+
+        return spawnedPotion;
     }
 
     // Distributes loot at a specific world position

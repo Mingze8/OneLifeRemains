@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9e9d298c003c0244a37a59927d9c3ba, type: 3}
+  m_Name: Ward
+  m_EditorClassIdentifier: 
+  lootName: Ward
+  description: Fire! Fire!!!
+  icon: {fileID: 21300000, guid: b1c6b014ee8384bde8873e80c5b3784c, type: 3}
+  lootType: 0
+  lootPrefab: {fileID: 1417765311873692327, guid: a94dadaeaf6756343b00265c08c3889b, type: 3}
+  stackSize: 5
+  weapon: {fileID: 11400000, guid: 191bf51be616eec408c8b62dbcff2277, type: 2}
+  enemy: {fileID: 0}
+  potion: {fileID: 0}

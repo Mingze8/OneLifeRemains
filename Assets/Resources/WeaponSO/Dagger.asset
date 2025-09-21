@@ -15,7 +15,7 @@ MonoBehaviour:
   weaponName: Dagger
   weaponType: 0
   weaponIcon: {fileID: 21300000, guid: 30e47371660a44f038c174865e5af8d3, type: 3}
-  weaponPrefab: {fileID: 1941636751970302256, guid: b329a18fc23e3814e9c0fcf5dea0475a, type: 3}
+  weaponPrefab: {fileID: 3927575154109119352, guid: b329a18fc23e3814e9c0fcf5dea0475a, type: 3}
   weaponRarity: 0
   weight: 5
   baseAttackPower: 1

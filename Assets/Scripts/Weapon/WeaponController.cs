@@ -81,8 +81,8 @@ public class WeaponController : MonoBehaviour
                 magicCooldownTimer = magicWeapon.spellCooldown;  // Set the cooldown for magic weapon
                 timer = attackCooldown;  // General attack cooldown
             }
-            else if (!(currentWeapon is MagicWeaponSO))
-            {
+            else if (!(currentWeapon is MagicWeaponSO) && timer <= 0)
+            {                                
                 // Handle other weapon types (melee, ranged)
                 currentWeapon.UseWeapon(gameObject, playerAnimator, attackPoint, mouseDirection);
                 timer = attackCooldown;
