@@ -5,7 +5,10 @@ using UnityEngine;
 public class EnemyCombat : MonoBehaviour
 {
     private EnemyFSM fsm;
-    public int damage = 1;
+
+    [Header("Base Combat Stats")]
+    public int baseDamage = 1;
+    private int scaledDamage;
 
     [Header("Attack Area Settings")]
     public Transform attackPoint;
@@ -20,6 +23,39 @@ public class EnemyCombat : MonoBehaviour
     public void Start()
     {
         fsm = GetComponent<EnemyFSM>();
+
+        // Apply difficulty scaling to damage
+        if (DifficultyManager.Instance != null)
+        {
+            scaledDamage = DifficultyManager.Instance.GetScaledEnemyDamage(baseDamage);
+
+            // Subscribe to difficulty changes
+            DifficultyManager.OnDifficultyChanged += OnDifficultyChanged;
+        }
+        else
+        {
+            scaledDamage = baseDamage;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Unsubscribe from events
+        if (DifficultyManager.Instance != null)
+        {
+            DifficultyManager.OnDifficultyChanged -= OnDifficultyChanged;
+        }
+    }
+
+    private void OnDifficultyChanged(float newMultiplier)
+    {
+        // Update scaled damage when difficulty changes
+        scaledDamage = DifficultyManager.Instance.GetScaledEnemyDamage(baseDamage);
+
+        if (DifficultyManager.Instance.showDebugInfo)
+        {
+            Debug.Log($"Enemy {gameObject.name} damage updated: {baseDamage} -> {scaledDamage}");
+        }
     }
 
     private void Update()
@@ -33,7 +69,7 @@ public class EnemyCombat : MonoBehaviour
 
         if (hits.Length > 0) 
         {
-            hits[0].GetComponent<PlayerHealth>().changeHealth(-damage);
+            hits[0].GetComponent<PlayerHealth>().changeHealth(-scaledDamage);
             hits[0].GetComponent<PlayerController>().Stunned(stunTime);
         }
     }
@@ -45,7 +81,7 @@ public class EnemyCombat : MonoBehaviour
         Vector2 attackDirection = fsm.GetAttackDirection();
         if (attackDirection == Vector2.zero) return;
 
-        // Check if it's a magic attack (you can set some condition for magic attack like a special flag or time)
+        // Check if it's a magic attack
         if (magicProjectilePrefab != null)
         {
             // Spawn magic projectile
@@ -53,6 +89,7 @@ public class EnemyCombat : MonoBehaviour
 
             // Initialize the magic projectile
             MagicProjectile magicProjectileScript = magicProjectile.GetComponent<MagicProjectile>();
+
             if (magicProjectileScript != null)
             {
                 magicProjectileScript.Initialize(attackDirection, fsm.playerDetectRange, gameObject);
@@ -65,11 +102,26 @@ public class EnemyCombat : MonoBehaviour
 
             // Initialize regular projectile
             Projectile projectileScript = projectile.GetComponent<Projectile>();
+
             if (projectileScript != null)
             {
+                // Apply scaled damage to projectile
+                projectileScript.damage = scaledDamage;
                 projectileScript.Initialize(attackDirection, fsm.playerDetectRange, gameObject);
             }
         }        
+    }
+
+    // Getter for current scaled damage
+    public int GetCurrentDamage()
+    {
+        return scaledDamage;
+    }
+
+    // Getter for base damage
+    public int GetBaseDamage()
+    {
+        return baseDamage;
     }
 
     private void OnDrawGizmosSelected()

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -17,22 +18,76 @@ public class DistributionManager : MonoBehaviour
     [Header("Loot Chest Settings")]
     public List<LootChestSO> lootChests; // List of loot chest ScriptableObjects
 
-    [Header("Spawn Settings")]
-    public int minEnemiesPerRoom = 2;
-    public int maxEnemiesPerRoom = 4;
-
-    public int minLootChestsPerRoom = 1;
-    public int maxLootChestsPerRoom = 2;
+    [Header("Base Spawn Settings")]
+    public int baseMinEnemiesPerRoom = 2;
+    public int baseMaxEnemiesPerRoom = 4;
+    public int baseMinLootChestsPerRoom = 1;
+    public int baseMaxLootChestsPerRoom = 2;   
 
     [Header("Debug")]
-    public bool showDebugLogs = true;    
+    public bool showDebugLogs = true;
 
-    [Header("Loot Distribution Settings")]
-    // Probability of spawning a loot chest for next room
-    public float lootChestSpawnChance = 0.5f;
+    [Header("Base Loot Distribution Settings")]
+    public float baseLootChestSpawnChance = 0.5f;
 
     public int minLootItems = 1;
     public int maxLootItems = 3;
+
+    // Track current scaled values
+    private int scaledMinEnemiesPerRoom;
+    private int scaledMaxEnemiesPerRoom;
+    private float scaledLootChestSpawnChance;
+
+    void Start()
+    {
+        // Initialize scaled values
+        UpdateScaledValues();
+
+        // Subscribe to difficulty changes
+        if (DifficultyManager.Instance != null)
+        {
+            DifficultyManager.OnDifficultyChanged += OnDifficultyChanged;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Unsubscribe from events
+        if (DifficultyManager.Instance != null)
+        {
+            DifficultyManager.OnDifficultyChanged -= OnDifficultyChanged;
+        }
+    }
+
+    private void OnDifficultyChanged(float newMultiplier)
+    {
+        UpdateScaledValues();
+    }
+
+    private void UpdateScaledValues()
+    {
+        if (DifficultyManager.Instance != null)
+        {
+            // Update enemy spawn counts
+            scaledMinEnemiesPerRoom = Mathf.RoundToInt(baseMinEnemiesPerRoom * DifficultyManager.Instance.GetDifficultyMultiplier());
+            scaledMaxEnemiesPerRoom = Mathf.RoundToInt(baseMaxEnemiesPerRoom * DifficultyManager.Instance.GetDifficultyMultiplier());
+
+            // Update loot chest spawn chance
+            scaledLootChestSpawnChance = DifficultyManager.Instance.GetScaledLootChestChance(baseLootChestSpawnChance);
+
+            if (DifficultyManager.Instance.showDebugInfo)
+            {
+                Debug.Log($"Distribution scaling updated: Enemies {scaledMinEnemiesPerRoom}-{scaledMaxEnemiesPerRoom}, " +
+                         $"Chest chance: {scaledLootChestSpawnChance:P1}");
+            }
+        }
+        else
+        {
+            scaledMinEnemiesPerRoom = baseMinEnemiesPerRoom;
+            scaledMaxEnemiesPerRoom = baseMaxEnemiesPerRoom;
+            scaledLootChestSpawnChance = baseLootChestSpawnChance;
+        }
+    }
 
     // Used iterate through each room and spawn contents in the room
     public void SpawnContent(List<Room> rooms, HashSet<Vector2Int> allFloorTiles, int offset)
@@ -129,14 +184,23 @@ public class DistributionManager : MonoBehaviour
     // -----------------------------------------------   ENEMY SPAWNING PART - START  ----------------------------------------------- //
 
 
-    // Spawns a random number of enemies in a room
+    // Updated enemy spawning method
     private void SpawnEnemiesInRooms(Room room, List<Vector2Int> validSpawnPositions, int roomIndex, HashSet<Vector2Int> usedPos, Transform roomParentTransform)
     {
-        int enemiesToSpawn = Random.Range(minEnemiesPerRoom, maxEnemiesPerRoom + 1);
+        int enemiesToSpawn;
+
+        if (DifficultyManager.Instance != null)
+        {
+            enemiesToSpawn = DifficultyManager.Instance.GetScaledEnemySpawnCount(baseMinEnemiesPerRoom, baseMaxEnemiesPerRoom);
+        }
+        else
+        {
+            enemiesToSpawn = Random.Range(scaledMinEnemiesPerRoom, scaledMaxEnemiesPerRoom + 1);
+        }
 
         if (showDebugLogs)
         {
-            Debug.Log($"Room {roomIndex}: Spawning {enemiesToSpawn} enemies");
+            Debug.Log($"Room {roomIndex}: Spawning {enemiesToSpawn} enemies (Difficulty: {DifficultyManager.Instance?.GetDifficultyMultiplier():F2}x)");
         }
 
         for (int i = 0; i < enemiesToSpawn; i++)
@@ -146,7 +210,7 @@ public class DistributionManager : MonoBehaviour
             if (availablePositions.Count > 0)
             {
                 SpawnEnemyAtPosition(availablePositions, roomIndex, usedPos, roomParentTransform);
-            }            
+            }
         }
     }
 
@@ -211,18 +275,19 @@ public class DistributionManager : MonoBehaviour
     // -----------------------------------------------   LOOT CHEST SPAWNING PART - START  ----------------------------------------------- //
 
 
-    // Spawn loot chests in the room based on a random spawn chance, handle number of loot chest spawns
+    // Updated loot chest spawning method
     private void SpawnLootChestInRoom(Room room, List<Vector2Int> validSpawnPositions, int roomIndex, HashSet<Vector2Int> usedPos, Transform roomParentTransform)
     {
-        // Generate a random value to compare with the spawn chance
-        if (Random.value <= lootChestSpawnChance)
+        // Use scaled spawn chance
+        if (Random.value <= scaledLootChestSpawnChance)
         {
-            // Determine the number of loot chests to spawn
-            int lootChestsToSpawn = Random.Range(minLootChestsPerRoom, maxLootChestsPerRoom + 1);
+            // Use scaled chest counts
+            int lootChestsToSpawn = Random.Range(baseMinLootChestsPerRoom, baseMaxLootChestsPerRoom + 1);
 
             if (showDebugLogs)
             {
-                Debug.Log($"Room {roomIndex}: Spawning {lootChestsToSpawn} loot chests / Spawn Rate: {lootChestSpawnChance}");
+                Debug.Log($"Room {roomIndex}: Spawning {lootChestsToSpawn} loot chests / " +
+                         $"Spawn Rate: {scaledLootChestSpawnChance:P1} (Base: {baseLootChestSpawnChance:P1})");
             }
 
             for (int i = 0; i < lootChestsToSpawn; i++)
@@ -235,17 +300,26 @@ public class DistributionManager : MonoBehaviour
                 }
             }
 
-            // If loot chest is spawned, reset probability
-            lootChestSpawnChance = 0.5f;
+            // Reset probability after spawning
+            scaledLootChestSpawnChance = DifficultyManager.Instance?.GetScaledLootChestChance(baseLootChestSpawnChance) ?? baseLootChestSpawnChance;
         }
     }
 
-    // Increase the probability of loot chst spawning for next room
+    // Update loot chest spawn chance method
     private void UpdateLootChestSpawnChance()
     {
-        if (lootChestSpawnChance < 1.0f)
+        if (DifficultyManager.Instance != null)
         {
-            lootChestSpawnChance += 0.1f;
+            float baseIncrease = 0.1f;
+            float scaledIncrease = baseIncrease * DifficultyManager.Instance.GetDifficultyMultiplier();
+            scaledLootChestSpawnChance = Mathf.Min(scaledLootChestSpawnChance + scaledIncrease, 1.0f);
+        }
+        else
+        {
+            if (scaledLootChestSpawnChance < 1.0f)
+            {
+                scaledLootChestSpawnChance += 0.1f;
+            }
         }
     }
 
@@ -339,22 +413,53 @@ public class DistributionManager : MonoBehaviour
         return generatedLoot;
     }
 
+    // Updated loot generation with rarity scaling
     private GameObject GenerateRandomLootItem()
     {
         LootType selectedLootType = LootSO.SelectRandomLootType();
 
+        // Apply rarity scaling for weapon/equipment drops
+        if (DifficultyManager.Instance != null && selectedLootType == LootType.Weapon)
+        {
+            float rareChance = DifficultyManager.Instance.GetScaledRareLootChance(0.3f); // Base 30% for rare+
+            if (Random.value < rareChance)
+            {
+                if (showDebugLogs)
+                {
+                    Debug.Log($"Rolled for rare loot! Chance was: {rareChance:P1}");
+                }
+                // You could implement rarity-specific generation here
+                // Filter weapons by rarity
+                var rareWeapons = weapons.Where(weapon => weapon.weaponRarity != Rarity.Normal).ToList();
+
+                if (rareWeapons.Count > 0)
+                {
+                    // Generate rare weapon instead of normal one
+                    WeaponSO selectedRareWeapon = WeightedRandom.SelectRandom(rareWeapons, weapon => weapon.weight);
+                    GameObject rareWeapon = Instantiate(selectedRareWeapon.weaponPrefab);
+                    rareWeapon.name = $"WeaponLoot_{selectedRareWeapon.weaponName}";
+
+                    if (showDebugLogs)
+                    {
+                        Debug.Log($"GenerateRandomLootItem: Rare_Generated weapon loot: {selectedRareWeapon.weaponName} (Weapon Weight: {selectedRareWeapon.weight})");
+                    }
+                    return rareWeapon;
+                }
+            }
+        }
+
         if (showDebugLogs)
         {
-            Debug.Log($"GenerateRandomLootItem: Selected loot type: {selectedLootType}");            
+            Debug.Log($"GenerateRandomLootItem: Selected loot type: {selectedLootType}");
         }
 
         // Handle different loot types
         switch (selectedLootType)
         {
-            case LootType.Enemy:                
+            case LootType.Enemy:
                 return GenerateEnemyLootByType();
 
-            case LootType.Weapon:                
+            case LootType.Weapon:
                 return GenerateWeaponLootByType();
 
             case LootType.Potion:

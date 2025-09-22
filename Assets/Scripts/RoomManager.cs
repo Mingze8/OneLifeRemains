@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
+using static RoomManager;
 
 public class RoomManager : MonoBehaviour
 {
     [Header("Room Tracking")]
     public List<Room> rooms;
     public Transform player;
-    public int currentRoomIndex = -1;
+    public int currentRoomIndex = 0;
     public float roomCheckInterval = 0.5f;
 
     [Header("Debug")]
@@ -17,21 +18,75 @@ public class RoomManager : MonoBehaviour
 
     public delegate void RoomChangedHandler(int newRoomIndex, int previousRoomIndex);
     public event RoomChangedHandler OnRoomChanged;
+    public static event System.Action<int> OnRoomCompleted;
+
+    private bool gameStarted = false;
+
+    private void OnEnable()
+    {
+        OnRoomChanged += OnRoomChangedHandler;        
+    }
+
+    private void OnDisable()
+    {
+        OnRoomChanged -= OnRoomChangedHandler;
+    }
 
     private void Start()
     {
         InitializeRoomTracking();
         roomCheckTimer = roomCheckInterval;
+        gameStarted = true;
     }
 
     private void Update()
     {
+        if (!gameStarted) return;
+
         roomCheckTimer -= Time.deltaTime;
         if (roomCheckTimer <= 0)
         {
             CheckPlayerRoom();
             roomCheckTimer = roomCheckInterval;
         }
+    }
+
+    private void OnRoomChangedHandler(int newRoomIndex, int previousRoomIndex)
+    {
+        // Call CompleteRoom() whenever the room changes
+        CompleteRoom(previousRoomIndex);
+    }
+
+    private void CompleteRoom(int roomIndex)
+    {
+        Debug.Log($"CompleteRoom called for room {roomIndex}");
+        if (IsRoomCleared(roomIndex))
+        {
+            OnRoomCompleted?.Invoke(roomIndex);            
+        }
+    }
+
+    private bool IsRoomCleared(int roomIndex)
+    {
+        // Get the list of enemies in the current room
+        List<EnemyFSM> enemiesInRoom = GetEnemiesInRoom(roomIndex);
+
+        // Check if all enemies in the room are defeated or inactive
+        foreach (EnemyFSM enemy in enemiesInRoom)
+        {
+            if (enemy != null)
+            {
+                EnemyHealth enemyHealth = enemy.GetComponent<EnemyHealth>();
+                // If an enemy is still active, the room is not cleared
+                if (enemy != null && enemyHealth.GetCurrentHealth() > 0)
+                {
+                    return false;
+                }
+            }            
+        }
+
+        // All enemies are cleared
+        return true;
     }
 
     public void InitializeRoomTracking()
@@ -130,7 +185,7 @@ public class RoomManager : MonoBehaviour
                         enemy.SetRoomActive(false);
                     }
                 }
-            }
+            }            
         }
     }
 

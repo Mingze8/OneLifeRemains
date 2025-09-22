@@ -11,6 +11,8 @@ public class LootChestInteraction : MonoBehaviour
 
     private Image interactionPromptImage;
 
+    public static event System.Action OnChestOpened;
+
     private void Start()
     {
         chestAnimator = GetComponent<Animator>();
@@ -26,7 +28,7 @@ public class LootChestInteraction : MonoBehaviour
         }
 
         distributionManager = FindObjectOfType<DistributionManager>();
-    }
+    } 
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -73,7 +75,8 @@ public class LootChestInteraction : MonoBehaviour
     }
 
     private void OpenLootChest()
-    {        
+    {
+        OnChestOpened?.Invoke(); // Add this line
         distributionManager.OnChestOpened(gameObject);
     }
 

@@ -13,6 +13,7 @@ public class Loot : MonoBehaviour
     public bool canBePickedUp = true;
     public int quantity;
     public static event Action<LootSO, int> OnItemLooted;
+    public static event System.Action<LootSO> OnRareItemLooted;
 
     private void OnValidate()
     {
@@ -40,21 +41,27 @@ public class Loot : MonoBehaviour
     {
         if (collision.CompareTag("Player") && canBePickedUp == true)
         {
-            {
-                anim.Play("LootPickup");
+            anim.Play("LootPickup");
 
-                if (lootSO.weapon != null)
+            if (lootSO.weapon != null)
+            {
+                var weaponInventory = collision.GetComponent<WeaponInventory>();
+                if (weaponInventory != null)
                 {
-                    var weaponInventory = collision.GetComponent<WeaponInventory>();
-                    if (weaponInventory != null) 
-                    {
-                        weaponInventory.AddWeapon(lootSO.weapon);
-                    }
+                    weaponInventory.AddWeapon(lootSO.weapon);
                 }
 
-                OnItemLooted?.Invoke(lootSO, quantity);
-                Destroy(gameObject, .5f);
+                // Check if it's a rare item
+                if (lootSO.weapon.weaponRarity == Rarity.Rare ||
+                    lootSO.weapon.weaponRarity == Rarity.Epic ||
+                    lootSO.weapon.weaponRarity == Rarity.Legendary)
+                {
+                    OnRareItemLooted?.Invoke(lootSO);
+                }
             }
+
+            OnItemLooted?.Invoke(lootSO, quantity);
+            Destroy(gameObject, .5f);
         }
     }
 
