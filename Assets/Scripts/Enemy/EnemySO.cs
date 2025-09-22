@@ -6,4 +6,5 @@ public class EnemySO : ScriptableObject
     public string enemyName;
     public int weight;
     public GameObject enemyPrefab;
+    public bool isBoss;
 }

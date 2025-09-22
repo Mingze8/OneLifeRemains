@@ -13,12 +13,10 @@ public class MagicProjectile : MonoBehaviour
     private Vector2 spawnPosition;
     private float maxRange;  // Maximum range for the projectile
 
-    public GameObject shooter;
-    private Animator anim;
+    public GameObject shooter;    
 
     public void Initialize(Vector2 direction, float attackRange, GameObject firedBy)
-    {
-        anim = GetComponent<Animator>();
+    {        
         moveDirection = direction.normalized;  // Normalize the direction to avoid inconsistent speed
         spawnPosition = transform.position;
         maxRange = attackRange;
@@ -80,6 +78,9 @@ public class MagicProjectile : MonoBehaviour
 
         foreach (Collider2D hit in hitObjects)
         {
+            if (hit.CompareTag(shooter.tag))
+                continue;
+
             if (hit.CompareTag("Enemy"))
             {
                 // Apply damage to the enemy

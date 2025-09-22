@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponName: Sword
   weaponType: 0
-  weaponIcon: {fileID: 21300000, guid: 6d883a2fc76fd4137ad47f5150294d01, type: 3}
+  weaponIcon: {fileID: 21300000, guid: 62833ece565accb4687dcd87dfe2127f, type: 3}
   weaponPrefab: {fileID: 3224060731794224616, guid: 5de45e06dd8d4d943b5dac39c8925d03, type: 3}
-  weaponRarity: 0
-  weight: 5
-  baseAttackPower: 3
+  weaponRarity: 1
+  weight: 3
+  baseAttackPower: 2
   attackSpeed: 1
   critChance: 0
   critDamage: 0

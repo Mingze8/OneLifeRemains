@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -15,6 +16,8 @@ public class RangedWeaponSO : WeaponSO
 
     public bool IsReloading => isReloading;
 
+
+    public static event Action<int> OnAmmoChanged;
 
     // Start the reload process
     public void StartReloading()
@@ -41,6 +44,7 @@ public class RangedWeaponSO : WeaponSO
             animator.SetTrigger("AttackRanged");  // Trigger the ranged attack animation
             FireProjectile(player, attackPoint, direction);
             currentAmmo--;  // Decrease ammo after firing
+            OnAmmoChanged?.Invoke(currentAmmo);
         }
         else
         {
@@ -64,7 +68,7 @@ public class RangedWeaponSO : WeaponSO
         Debug.Log("Fired ranged weapon!");
     }
 
-    private void ReloadWeapon()
+    public void ReloadWeapon()
     {
         isReloading = true;
         Debug.Log("Reloading...");
@@ -76,6 +80,7 @@ public class RangedWeaponSO : WeaponSO
     {
         yield return new WaitForSeconds(reloadSpeed);
         currentAmmo = ammoCapacity;  // Refill ammo
+        OnAmmoChanged?.Invoke(currentAmmo);
         isReloading = false;
         Debug.Log("Reload complete. Ammo refilled.");
     }
@@ -83,6 +88,11 @@ public class RangedWeaponSO : WeaponSO
     public void SetAmmo(int ammo)
     {
         currentAmmo = ammo;
+    }
+
+    public int GetCurrentAmmo() 
+    {
+        return currentAmmo;
     }
 
 }

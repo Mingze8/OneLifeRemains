@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9e9d298c003c0244a37a59927d9c3ba, type: 3}
+  m_Name: RangedEnemy
+  m_EditorClassIdentifier: 
+  lootName: Ranged Enemy
+  description: Eww disgusting!
+  icon: {fileID: 0}
+  lootType: 1
+  lootPrefab: {fileID: 5331485203839579108, guid: 36b756be52a0ce4429b4ef514e0e58f2, type: 3}
+  stackSize: 0
+  weapon: {fileID: 0}
+  enemy: {fileID: 11400000, guid: 83e32850bb0dbf84e876b51d01888024, type: 2}
+  potion: {fileID: 0}

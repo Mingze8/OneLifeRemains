@@ -31,5 +31,20 @@ public abstract class WeaponSO : ScriptableObject
     public float critChance;
     public float critDamage;
 
-    public abstract void UseWeapon(GameObject player, Animator animator, Transform attackPoint, Vector2 direction);    
+    public abstract void UseWeapon(GameObject player, Animator animator, Transform attackPoint, Vector2 direction);
+
+    public int GetPrice()
+    {
+        switch (weaponRarity)
+        {
+            case Rarity.Rare:
+                return 20;
+            case Rarity.Epic:
+                return 50;
+            case Rarity.Legendary:
+                return 100;
+            default:
+                return 20;
+        }
+    }
 }

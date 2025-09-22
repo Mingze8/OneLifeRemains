@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a4079f83f764b04f8cbd89590c6ab0c, type: 3}
+  m_Name: Damage Potion
+  m_EditorClassIdentifier: 
+  potionName: Damage Potion
+  weight: 5
+  potionPrefab: {fileID: 5609113202755889371, guid: 4bd9dfeb5a5c786428704479e02a0bcc, type: 3}
+  damageIncreasePercentage: 1
+  duration: 5
