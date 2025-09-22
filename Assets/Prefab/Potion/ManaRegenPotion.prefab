@@ -192,3 +192,4 @@ MonoBehaviour:
   anim: {fileID: 7902073955450211574}
   canBePickedUp: 1
   quantity: 5
+  purchaseKey: 122

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using static RoomManager;
 
@@ -207,6 +207,20 @@ public class RoomManager : MonoBehaviour
     {
         rooms = newRooms;
         InitializeRoomTracking();
+    }
+
+    public RoomType GetCurrentRoomType()
+    {
+        if (currentRoomIndex >= 0 && currentRoomIndex < rooms.Count)
+        {
+            return rooms[currentRoomIndex].roomType;
+        }
+        return RoomType.Normal;
+    }
+
+    public bool IsPlayerInShopRoom()
+    {
+        return GetCurrentRoomType() == RoomType.Shop;
     }
 
     private void OnDrawGizmosSelected()

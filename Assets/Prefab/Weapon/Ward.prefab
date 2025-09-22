@@ -108,6 +108,8 @@ MonoBehaviour:
   anim: {fileID: 706213482861657599}
   canBePickedUp: 1
   quantity: 1
+  purchaseKey: 122
+  weaponStatsText: {fileID: 2790644094619462398, guid: cff959bdebb842b4596ca36009b3579a, type: 3}
 --- !u!1 &1665717731321806245
 GameObject:
   m_ObjectHideFlags: 0

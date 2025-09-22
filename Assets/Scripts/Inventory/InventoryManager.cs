@@ -17,6 +17,9 @@ public class InventoryManager : MonoBehaviour
         {
             slot.UpdateUI();
         }
+
+        // Subscribe to the item purchase event
+        Loot.OnItemPurchased += PurchaseItem;
     }
     private void OnEnable()
     {
@@ -25,12 +28,18 @@ public class InventoryManager : MonoBehaviour
 
     private void OnDisable()
     {
-        Loot.OnItemLooted -= AddItem;       
+        Loot.OnItemLooted -= AddItem;
+        Loot.OnItemPurchased -= PurchaseItem;
     }
 
     public void AddItem(LootSO lootSO, int quantity)
     {
         LootType type = lootSO.lootType;
+
+        if(type == LootType.Weapon)
+        {
+            return;
+        }
 
         if(type == LootType.Coin)
         {
@@ -90,6 +99,30 @@ public class InventoryManager : MonoBehaviour
     {
         Loot loot = Instantiate(lootPrefab, player.position, Quaternion.identity).GetComponent<Loot>();
         loot.Initialize(lootSO, quantity);
+    }
+
+    private void PurchaseItem(LootSO lootSO, int quantity)
+    {
+        // Check if lootSO is a valid item for the purchase
+        if (lootSO != null && lootSO.weapon != null)
+        {
+            // Add the item to the inventory
+            AddItem(lootSO, quantity);
+            Debug.Log($"Purchased {lootSO.name} for {lootSO.weapon.GetPrice()} coins.");
+        }
+    }
+
+    public void DeductCoins(int amount)
+    {
+        if (coin >= amount)
+        {
+            coin -= amount;
+            coinText.text = coin.ToString();
+        }
+        else
+        {
+            Debug.Log("Not enough coins to deduct.");
+        }
     }
 
     void Update()

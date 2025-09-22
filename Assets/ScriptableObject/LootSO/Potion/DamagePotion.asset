@@ -17,6 +17,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 46de1a51d86bf2744a10b390a04f23dc, type: 3}
   lootType: 2
   lootPrefab: {fileID: 5609113202755889371, guid: 4bd9dfeb5a5c786428704479e02a0bcc, type: 3}
+  stackSize: 5
+  weight: 5
+  isShopItem: 0
   weapon: {fileID: 0}
   enemy: {fileID: 0}
   potion: {fileID: 11400000, guid: 0cf90e62a7206f145bac52fe1d4784bd, type: 2}

@@ -19,6 +19,7 @@ public class LootSO : ScriptableObject
     public LootType lootType;
     public GameObject lootPrefab;
     public int stackSize = 5;
+    public int weight;    
 
     [Header("Loot Type Specific Settings")]
     public WeaponSO weapon;

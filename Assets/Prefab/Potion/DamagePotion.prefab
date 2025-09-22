@@ -43,7 +43,7 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5609113202755889371}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: 2ba5ba7a98ac544499f8fca68b60539e, type: 2}
   m_CullingMode: 0
@@ -108,6 +108,7 @@ MonoBehaviour:
   anim: {fileID: 8053036778435232496}
   canBePickedUp: 1
   quantity: 5
+  purchaseKey: 122
 --- !u!1 &9205207490623324860
 GameObject:
   m_ObjectHideFlags: 0

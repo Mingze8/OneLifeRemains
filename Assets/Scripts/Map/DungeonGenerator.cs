@@ -5,8 +5,21 @@ using UnityEngine.Tilemaps;
 using Cinemachine;
 using UnityEditor;
 
-public class DungeonGenerator : MonoBehaviour
+public partial class DungeonGenerator : MonoBehaviour
 {
+    [Header("Special Room Settings")]
+    public bool generateBossRoom = true;
+    public bool generateShopRoom = true;
+    public int minRoomsForSpecialRooms = 4;
+
+    [Header("Boss Room Prefabs")]
+    public GameObject bossDoorPrefab;
+    public Material bossRoomFloorMaterial;
+
+    [Header("Shop Room Prefabs")]
+    public GameObject shopDoorPrefab;
+    public Material shopRoomFloorMaterial;
+
     [Header("Room Management")]
     public RoomManager roomManager;
 
@@ -70,6 +83,16 @@ public class DungeonGenerator : MonoBehaviour
         Debug.Log($"=== DUNGEON GENERATION STARTED ===");
         Debug.Log($"Target: {rooms.Count} rooms on {mapWidth}x{mapHeight} map");
 
+        // Initialize room indices and starting room
+        for (int i = 0; i < rooms.Count; i++)
+        {
+            rooms[i].roomIndex = i;
+            if (i == 0) rooms[i].roomType = RoomType.Starting;
+        }
+
+        // Assign special room types BEFORE generating layouts
+        AssignSpecialRooms();
+
         Debug.Log($"=== ROOM GENERATION - COVERAGE METRICS ===");
         for (int i = 0; i < rooms.Count; i++)
         {
@@ -82,18 +105,20 @@ public class DungeonGenerator : MonoBehaviour
             return;
         }
 
+        // Analyze room connections after corridor generation
+        AnalyzeRoomConnections();
+
         GenerateWalls();
         SpawnPlayer();
 
+        // Use enhanced content spawning
         distributionManager.SpawnContent(rooms, allFloorTiles, offset);
 
-        // Initialize room management after everything is spawned
         InitializeRoomManager();
-
         LogOverallDungeonMetrics();
 
         Debug.Log($"=== DUNGEON GENERATION COMPLETE ===");
-    }    
+    }
 
     // To regenerate dungeon while some condition met
     public void RegenerateDungeon()
@@ -140,17 +165,20 @@ public class DungeonGenerator : MonoBehaviour
 
     // Creates the floor tiles inside a given partitioned room and apply offset
     void GenerateRoomLayout(RectInt room, int roomIndex)
-    {        
+    {
         RectInt paddedRoom = ApplyOffset(room, offset);
         HashSet<Vector2Int> roomTiles = RandomWalk(paddedRoom, 0);
 
         float actualCoverage = (float)roomTiles.Count / (paddedRoom.width * paddedRoom.height);
-        Debug.Log($"Room {roomIndex + 1}: Coverage {actualCoverage:P1} (Target: {roomFillRatio:P1}), " +
+        Debug.Log($"Room {roomIndex + 1} ({rooms[roomIndex].roomType}): Coverage {actualCoverage:P1} (Target: {roomFillRatio:P1}), " +
                   $"Tiles: {roomTiles.Count}/{paddedRoom.width * paddedRoom.height}");
+
+        // Choose tile based on room type
+        TileBase tileToUse = GetTileForRoomType(rooms[roomIndex].roomType);
 
         foreach (var pos in roomTiles)
         {
-            tilemap.SetTile((Vector3Int)pos, floorTile);
+            tilemap.SetTile((Vector3Int)pos, tileToUse);
             allFloorTiles.Add(pos);
         }
     }
@@ -270,17 +298,21 @@ public class DungeonGenerator : MonoBehaviour
     // Connects rooms with corridors    
     bool ConnectRoomsWithCorridors(List<Room> rooms)
     {
-        Debug.Log($"=== CORRIDOR GENERATION ===");        
+        Debug.Log($"=== CORRIDOR GENERATION ===");
 
         HashSet<(int, int)> connections = new HashSet<(int, int)>();
         List<int> connectionOrder = GetConnectionOrder(rooms);
 
-        // Connect rooms with corridors
+        // Connect rooms with corridors and track connections
         for (int i = 0; i < connectionOrder.Count - 1; i++)
         {
             int roomA = connectionOrder[i];
             int roomB = connectionOrder[i + 1];
             connections.Add((Mathf.Min(roomA, roomB), Mathf.Max(roomA, roomB)));
+
+            // Track bidirectional connections
+            rooms[roomA].connectedRooms.Add(roomB);
+            rooms[roomB].connectedRooms.Add(roomA);
         }
 
         foreach (var connection in connections)
@@ -288,17 +320,15 @@ public class DungeonGenerator : MonoBehaviour
             Vector2Int centerA = rooms[connection.Item1].GetCenter();
             Vector2Int centerB = rooms[connection.Item2].GetCenter();
 
-            //  Get the edge of the rooms
             List<Vector2Int> roomAEdges = GetRoomEdges(rooms[connection.Item1]);
             List<Vector2Int> roomBEdges = GetRoomEdges(rooms[connection.Item2]);
 
             Vector2Int start = GetClosestEdge(roomAEdges, centerB);
             Vector2Int end = GetClosestEdge(roomBEdges, centerA);
 
-            GenerateCorridor(start, end);            
+            GenerateCorridor(start, end);
         }
-        
-        // Check if the door generation successfully (if not regenerate dungeon)
+
         if (needRegenerate)
         {
             Debug.LogWarning("Door placement failed, regenerating dungeon..");
@@ -307,7 +337,7 @@ public class DungeonGenerator : MonoBehaviour
             return false;
         }
 
-        Debug.Log($"Connected all corridors and wall");
+        Debug.Log($"Connected all corridors and walls");
         return true;
     }
 
@@ -705,16 +735,27 @@ public class DungeonGenerator : MonoBehaviour
     }
 
     // Get the tile for door by direction
-    GameObject GetDoorTypeByDirection(Vector2Int direction)
+    GameObject GetDoorTypeByDirection(Vector2Int direction, Room roomA = null, Room roomB = null)
     {
+        // Check if either room is special and use special door
+        if (roomA?.roomType == RoomType.Boss || roomB?.roomType == RoomType.Boss)
+        {
+            if (bossDoorPrefab != null) return bossDoorPrefab;
+        }
+        else if (roomA?.roomType == RoomType.Shop || roomB?.roomType == RoomType.Shop)
+        {
+            if (shopDoorPrefab != null) return shopDoorPrefab;
+        }
+
+        // Default door logic
         if (direction == Vector2Int.up || direction == Vector2Int.down)
         {
             return verticalDoor;
-        }            
+        }
         else if (direction == Vector2Int.left)
         {
             return leftDoor;
-        }            
+        }
         else if (direction == Vector2Int.right)
         {
             return rightDoor;
@@ -849,7 +890,129 @@ public class DungeonGenerator : MonoBehaviour
 
     // -----------------------------------------------   PLAYER GENERATION PART - END  ----------------------------------------------- //
 
+    // Method to assign special room types
+    void AssignSpecialRooms()
+    {
+        if (rooms.Count < minRoomsForSpecialRooms)
+        {
+            Debug.LogWarning($"Not enough rooms ({rooms.Count}) to generate special rooms. Need at least {minRoomsForSpecialRooms}");
+            return;
+        }
 
+        List<int> availableRooms = new List<int>();
+
+        // Skip the starting room (index 0) for special room assignment
+        for (int i = 1; i < rooms.Count; i++)
+        {
+            availableRooms.Add(i);
+        }
+
+        // Assign boss room - prefer the furthest room from start
+        if (generateBossRoom && availableRooms.Count > 0)
+        {
+            int bossRoomIndex = FindBestBossRoom();
+            if (bossRoomIndex != -1)
+            {
+                rooms[bossRoomIndex].SetRoomType(RoomType.Boss);
+                availableRooms.Remove(bossRoomIndex);
+                Debug.Log($"Assigned Boss Room: Room {bossRoomIndex}");
+            }
+        }
+
+        // Assign shop room - prefer a room that's not too close to start or boss
+        if (generateShopRoom && availableRooms.Count > 0)
+        {
+            int shopRoomIndex = FindBestShopRoom(availableRooms);
+            if (shopRoomIndex != -1)
+            {
+                rooms[shopRoomIndex].SetRoomType(RoomType.Shop);
+                availableRooms.Remove(shopRoomIndex);
+                Debug.Log($"Assigned Shop Room: Room {shopRoomIndex}");
+            }
+        }
+
+        // Optional: Add treasure rooms if you have even more rooms
+        if (availableRooms.Count > 2)
+        {
+            int treasureRoomIndex = availableRooms[Random.Range(0, availableRooms.Count)];
+            rooms[treasureRoomIndex].SetRoomType(RoomType.Treasure);
+            Debug.Log($"Assigned Treasure Room: Room {treasureRoomIndex}");
+        }
+    }
+
+    // Find the best room for the boss - furthest from start
+    int FindBestBossRoom()
+    {
+        int bestRoom = -1;
+        float maxDistance = 0f;
+        Vector2Int startCenter = rooms[0].GetCenter();
+
+        for (int i = 1; i < rooms.Count; i++)
+        {
+            Vector2Int roomCenter = rooms[i].GetCenter();
+            float distance = Vector2Int.Distance(startCenter, roomCenter);
+
+            if (distance > maxDistance)
+            {
+                maxDistance = distance;
+                bestRoom = i;
+            }
+        }
+
+        return bestRoom;
+    }
+
+    // Find the best room for the shop - middle distance from start
+    int FindBestShopRoom(List<int> availableRooms)
+    {
+        if (availableRooms.Count == 0) return -1;
+
+        Vector2Int startCenter = rooms[0].GetCenter();
+        List<(int index, float distance)> roomDistances = new List<(int, float)>();
+
+        foreach (int roomIndex in availableRooms)
+        {
+            Vector2Int roomCenter = rooms[roomIndex].GetCenter();
+            float distance = Vector2Int.Distance(startCenter, roomCenter);
+            roomDistances.Add((roomIndex, distance));
+        }
+
+        // Sort by distance and pick a room in the middle range
+        roomDistances.Sort((a, b) => a.distance.CompareTo(b.distance));
+        int middleIndex = roomDistances.Count / 3; // Pick from the first third to middle
+        int endIndex = Mathf.Min(middleIndex + roomDistances.Count / 3, roomDistances.Count - 1);
+
+        int selectedIndex = Random.Range(middleIndex, endIndex + 1);
+        return roomDistances[selectedIndex].index;
+    }
+
+    // Analyze room connections to identify dead ends
+    void AnalyzeRoomConnections()
+    {
+        foreach (var room in rooms)
+        {
+            room.isDeadEnd = room.connectedRooms.Count <= 1;
+            if (room.isDeadEnd && room.roomType == RoomType.Normal)
+            {
+                Debug.Log($"Room {room.roomIndex} is a dead end");
+            }
+        }
+    }
+
+    TileBase GetTileForRoomType(RoomType roomType)
+    {
+        switch (roomType)
+        {
+            case RoomType.Boss:
+                // You might want to create a different colored tile for boss rooms
+                return floorTile; // For now, use default - you can change this
+            case RoomType.Shop:
+                // You might want to create a different colored tile for shop rooms
+                return floorTile; // For now, use default - you can change this
+            default:
+                return floorTile;
+        }
+    }
 
     // -----------------------------------------------   DUNGEON QUALITY METRICS & DEBUGGING PART - START  ----------------------------------------------- //
 
@@ -904,6 +1067,7 @@ public class DungeonGenerator : MonoBehaviour
     }
 
     // Draws visual guides in unity scene view to visualize dungeon structure
+    // Enhanced gizmo drawing to show room types
     void OnDrawGizmos()
     {
         if (rooms == null) return;
@@ -914,9 +1078,27 @@ public class DungeonGenerator : MonoBehaviour
             Vector3 center = new Vector3(room.rect.center.x, room.rect.center.y, 0);
             Vector3 size = new Vector3(room.rect.width, room.rect.height, 0.1f);
 
-            // Highlight room 0 (starting room) in green
-            Gizmos.color = i == 0 ? Color.green : Color.red;
-            Gizmos.DrawWireCube(center, size);
+            // Color code room types
+            switch (room.roomType)
+            {
+                case RoomType.Starting:
+                    Gizmos.color = Color.green;
+                    break;
+                case RoomType.Boss:
+                    Gizmos.color = Color.red;
+                    break;
+                case RoomType.Shop:
+                    Gizmos.color = Color.blue;
+                    break;
+                case RoomType.Treasure:
+                    Gizmos.color = Color.yellow;
+                    break;
+                default:
+                    Gizmos.color = Color.white;
+                    break;
+            }
+
+            Gizmos.DrawWireCube(center, size);           
         }
     }
 

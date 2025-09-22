@@ -16,7 +16,10 @@ MonoBehaviour:
   description: Healing..
   icon: {fileID: 21300000, guid: 5614b027be37e10428b3ba52b2e10a56, type: 3}
   lootType: 2
-  lootPrefab: {fileID: 8670813810504687868, guid: 343590bbd1ae4ca4a91d7c0bf98f804c, type: 3}
+  lootPrefab: {fileID: 6986098525849804124, guid: 343590bbd1ae4ca4a91d7c0bf98f804c, type: 3}
+  stackSize: 5
+  weight: 5
+  isShopItem: 0
   weapon: {fileID: 0}
   enemy: {fileID: 0}
   potion: {fileID: 11400000, guid: 04d010a15ff65b547962ce63b9684995, type: 2}

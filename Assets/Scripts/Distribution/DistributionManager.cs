@@ -18,6 +18,9 @@ public class DistributionManager : MonoBehaviour
     [Header("Loot Chest Settings")]
     public List<LootChestSO> lootChests; // List of loot chest ScriptableObjects
 
+    [Header("Loot Settings")]
+    public List<LootSO> loots;
+
     [Header("Base Spawn Settings")]
     public int baseMinEnemiesPerRoom = 2;
     public int baseMaxEnemiesPerRoom = 4;
@@ -39,8 +42,7 @@ public class DistributionManager : MonoBehaviour
     private float scaledLootChestSpawnChance;
 
     void Start()
-    {
-        // Initialize scaled values
+    {        
         UpdateScaledValues();
 
         // Subscribe to difficulty changes
@@ -140,11 +142,22 @@ public class DistributionManager : MonoBehaviour
         // Track used positions to prevent overlap
         HashSet<Vector2Int> usedPositions = new HashSet<Vector2Int>();
 
-        // Spawn Enemies
-        SpawnEnemiesInRooms(room, validSpawnPositions, roomIndex, usedPositions, roomParent.transform);
+        if (room.roomType == RoomType.Shop)
+        {
+            SpawnLootInShopRoom(validSpawnPositions, roomParent.transform, roomIndex);
+        }
+        else if(room.roomType == RoomType.Boss)
+        {
+            //SpawnBossInRoom(room, validSpawnPositions, roomParent.transform, roomIndex);
+        }
+        else
+        {
+            // Spawn Enemies
+            SpawnEnemiesInRooms(room, validSpawnPositions, roomIndex, usedPositions, roomParent.transform);
 
-        // Spawn Loot Chest
-        SpawnLootChestInRoom(room, validSpawnPositions, roomIndex, usedPositions, roomParent.transform);
+            // Spawn Loot Chest
+            SpawnLootChestInRoom(room, validSpawnPositions, roomIndex, usedPositions, roomParent.transform);            
+        }
 
         // Update loot chest spawn chance for next room
         UpdateLootChestSpawnChance();        
@@ -179,6 +192,47 @@ public class DistributionManager : MonoBehaviour
         return position.x >= roomBounds.x && position.x < roomBounds.x + roomBounds.width &&
             position.y >= roomBounds.y && position.y < roomBounds.y + roomBounds.height;
     }
+
+
+    // -----------------------------------------------   SHOP SPAWNING PART - START  ----------------------------------------------- //
+
+    private void SpawnLootInShopRoom(List<Vector2Int> validSpawnPositions, Transform roomParentTransform, int roomIndex)
+    {        
+        // Pick 3 random items from LootSO
+        List<LootSO> lootItems = new List<LootSO>();
+        int lootCount = 0;
+
+        var validLootItems = loots.Where(loot => loot.lootType != LootType.Enemy &&
+                                               ((loot.weapon != null && loot.weapon.weaponRarity >= Rarity.Rare) ||
+                                                (loot.potion != null && loot.potion.weight >= 1) ||
+                                                (loot.weapon != null && loot.weapon.weight >= 1))
+                                               ).ToList();
+
+        while (lootCount < 3 && validLootItems.Count > 0)
+        {
+            LootSO lootItem = WeightedRandom.SelectRandom(validLootItems, loot => loot.weight);
+            lootItems.Add(lootItem);
+            lootCount++;
+        }
+
+        foreach (var loot in lootItems)
+        {
+            // Choose a valid spawn position
+            Vector2Int spawnPos = validSpawnPositions[Random.Range(0, validSpawnPositions.Count)];
+            validSpawnPositions.Remove(spawnPos);            
+
+            // Instantiate the loot at the position
+            GameObject lootObject = Instantiate(loot.lootPrefab, new Vector3(spawnPos.x + 0.5f, spawnPos.y + 0.25f, 0), Quaternion.identity);
+            lootObject.transform.SetParent(roomParentTransform);
+
+            if (showDebugLogs)
+            {
+                Debug.Log($"Room {roomIndex + 1}: Spawned loot item {loot.lootName} at position {spawnPos}");
+            }
+        }
+    }
+
+    // -----------------------------------------------   SHOP SPAWNING PART - END  ----------------------------------------------- //
 
 
     // -----------------------------------------------   ENEMY SPAWNING PART - START  ----------------------------------------------- //
