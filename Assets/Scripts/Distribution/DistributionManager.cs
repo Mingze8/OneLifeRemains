@@ -9,6 +9,9 @@ public class DistributionManager : MonoBehaviour
     [Header("Enemy Settings")]
     public List<EnemySO> enemies; // List of enemy ScriptableObjects
 
+    [Header("Boss Enemy")]
+    public List<EnemySO> bossEnemies; // List of boss enemy
+
     [Header("Weapon Settings")]
     public List<WeaponSO> weapons;
 
@@ -148,7 +151,7 @@ public class DistributionManager : MonoBehaviour
         }
         else if(room.roomType == RoomType.Boss)
         {
-            //SpawnBossInRoom(room, validSpawnPositions, roomParent.transform, roomIndex);
+            SpawnBossInRoom(room, validSpawnPositions, roomParent.transform, roomIndex);
         }
         else
         {
@@ -235,6 +238,38 @@ public class DistributionManager : MonoBehaviour
     // -----------------------------------------------   SHOP SPAWNING PART - END  ----------------------------------------------- //
 
 
+    // -----------------------------------------------   BOSS SPAWNING PART - START  ----------------------------------------------- //
+
+    private void SpawnBossInRoom(Room room, List<Vector2Int> validSpawnPositions, Transform roomParentTransform, int roomIndex)
+    {
+
+        // Use weighted random selection to pick a boss enemy
+        EnemySO selectedBossEnemy = WeightedRandom.SelectRandom(bossEnemies, enemy => enemy.weight);
+
+        if (selectedBossEnemy != null && selectedBossEnemy.enemyPrefab != null)
+        {
+            // Spawn the boss at the center of the room
+            Vector2Int spawnPos = room.GetCenter();
+            Vector3 worldPosition = new Vector3(spawnPos.x + 0.5f, spawnPos.y + 0.25f, 0);
+
+            // Instantiate the selected boss enemy
+            GameObject boss = Instantiate(selectedBossEnemy.enemyPrefab, worldPosition, Quaternion.identity);
+            boss.transform.SetParent(roomParentTransform);
+
+            if (showDebugLogs)
+            {
+                Debug.Log($"Room {roomIndex}: Spawned boss enemy {selectedBossEnemy.enemyName} at position {spawnPos}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Selected boss enemy has no prefab assigned!");
+        }                  
+    }
+
+    // -----------------------------------------------   BOSS SPAWNING PART - END  ----------------------------------------------- //
+
+
     // -----------------------------------------------   ENEMY SPAWNING PART - START  ----------------------------------------------- //
 
 
@@ -278,7 +313,7 @@ public class DistributionManager : MonoBehaviour
         Vector2Int spawnPosition = validPositions[randomIndex];
         validPositions.RemoveAt(randomIndex);
 
-        usedPos.Add(spawnPosition);
+        usedPos.Add(spawnPosition);        
 
         // Select a random enemy based on weight
         EnemySO selectedEnemy = WeightedRandom.SelectRandom(enemies, enemy => enemy.weight);

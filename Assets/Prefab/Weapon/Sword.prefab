@@ -109,7 +109,6 @@ MonoBehaviour:
   canBePickedUp: 1
   quantity: 1
   purchaseKey: 122
-  weaponStatsText: {fileID: 2790644094619462398, guid: cff959bdebb842b4596ca36009b3579a, type: 3}
 --- !u!1 &7107737289657517975
 GameObject:
   m_ObjectHideFlags: 0

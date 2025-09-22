@@ -15,7 +15,10 @@ MonoBehaviour:
   lootName: Coin
   description: Everyone Like It!
   icon: {fileID: 21300000, guid: 267e9e6d07acb184d82aca1575068a1b, type: 3}
-  lootType: 2
+  lootType: 3
   lootPrefab: {fileID: 0}
+  stackSize: 5
+  weight: 0
   weapon: {fileID: 0}
   enemy: {fileID: 0}
+  potion: {fileID: 0}

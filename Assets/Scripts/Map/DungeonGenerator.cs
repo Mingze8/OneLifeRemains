@@ -64,6 +64,7 @@ public partial class DungeonGenerator : MonoBehaviour
     private List<GameObject> doorInstances = new List<GameObject>();
 
     private bool needRegenerate = false;
+    bool bossRoomAssigned = false;
 
     void Start()
     {
@@ -170,7 +171,7 @@ public partial class DungeonGenerator : MonoBehaviour
         HashSet<Vector2Int> roomTiles = RandomWalk(paddedRoom, 0);
 
         float actualCoverage = (float)roomTiles.Count / (paddedRoom.width * paddedRoom.height);
-        Debug.Log($"Room {roomIndex + 1} ({rooms[roomIndex].roomType}): Coverage {actualCoverage:P1} (Target: {roomFillRatio:P1}), " +
+        Debug.Log($"Room {roomIndex} ({rooms[roomIndex].roomType}): Coverage {actualCoverage:P1} (Target: {roomFillRatio:P1}), " +
                   $"Tiles: {roomTiles.Count}/{paddedRoom.width * paddedRoom.height}");
 
         // Choose tile based on room type
@@ -906,15 +907,16 @@ public partial class DungeonGenerator : MonoBehaviour
         {
             availableRooms.Add(i);
         }
-
+      
         // Assign boss room - prefer the furthest room from start
-        if (generateBossRoom && availableRooms.Count > 0)
+        if (generateBossRoom && availableRooms.Count > 0 && !bossRoomAssigned)
         {
             int bossRoomIndex = FindBestBossRoom();
             if (bossRoomIndex != -1)
             {
                 rooms[bossRoomIndex].SetRoomType(RoomType.Boss);
                 availableRooms.Remove(bossRoomIndex);
+                bossRoomAssigned = true;
                 Debug.Log($"Assigned Boss Room: Room {bossRoomIndex}");
             }
         }
@@ -931,13 +933,13 @@ public partial class DungeonGenerator : MonoBehaviour
             }
         }
 
-        // Optional: Add treasure rooms if you have even more rooms
-        if (availableRooms.Count > 2)
-        {
-            int treasureRoomIndex = availableRooms[Random.Range(0, availableRooms.Count)];
-            rooms[treasureRoomIndex].SetRoomType(RoomType.Treasure);
-            Debug.Log($"Assigned Treasure Room: Room {treasureRoomIndex}");
-        }
+        //// Optional: Add treasure rooms if you have even more rooms
+        //if (availableRooms.Count > 2)
+        //{
+        //    int treasureRoomIndex = availableRooms[Random.Range(0, availableRooms.Count)];
+        //    rooms[treasureRoomIndex].SetRoomType(RoomType.Treasure);
+        //    Debug.Log($"Assigned Treasure Room: Room {treasureRoomIndex}");
+        //}
     }
 
     // Find the best room for the boss - furthest from start
